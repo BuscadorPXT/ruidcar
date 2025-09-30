@@ -1,0 +1,407 @@
+/* Premium Landing Page Styles - Tesla-inspired */
+
+.premium-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+  background: #000;
+}
+
+.video-background video {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  -o-object-fit: cover;
+  object-fit: cover;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  pointer-events: none; /* Evitar interações com o vídeo */
+}
+
+/* Fix específico para iOS Safari */
+@supports (-webkit-touch-callout: none) {
+  .video-background video {
+    position: fixed;
+    min-height: 100%;
+    min-width: 100%;
+  }
+}
+
+/* Interface de toque para iniciar vídeo */
+.video-start-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  z-index: 10;
+  cursor: pointer;
+}
+
+.video-start-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #FF6600;
+  text-shadow: 0 0 10px rgba(255, 102, 0, 0.5);
+  animation: pulse 2s infinite;
+}
+
+.video-start-text {
+  margin-top: 16px;
+  font-size: 18px;
+  font-weight: 500;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Estilo para a imagem de fundo em mobile */
+.image-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+  background-color: #000;
+}
+
+.image-background img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.8; /* Escurecer ligeiramente a imagem para melhorar legibilidade do texto */
+  filter: brightness(0.7) contrast(1.1); /* Ajustar contraste */
+}
+
+/* Media query para dispositivos móveis */
+@media (max-width: 768px) {
+  /* Ajustes específicos para dispositivos móveis */
+  .image-background img {
+    object-position: center; /* Centralizar imagem */
+  }
+  
+  /* Fundo gradiente para melhorar contraste */
+  .image-background::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.5) 100%);
+    z-index: 1;
+  }
+}
+
+@keyframes gradientBg {
+  0% { background-position: 0% 50%; opacity: 0.7; }
+  50% { background-position: 100% 50%; opacity: 0.5; }
+  100% { background-position: 0% 50%; opacity: 0.7; }
+}
+
+/* Estilos para o background com YouTube */
+.youtube-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none; /* Impede interações com o iframe */
+}
+
+.youtube-background iframe {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100vw;
+  height: 100vh;
+  transform: translate(-50%, -50%);
+  pointer-events: none; /* Impede interações com o iframe */
+  filter: brightness(0.7); /* Escurece um pouco o vídeo para melhorar contraste com o texto */
+}
+
+/* Garante tratamento adequado do YouTube em dispositivos móveis */
+@media (max-width: 768px) {
+  .youtube-background iframe {
+    width: 300%;
+    height: 100vh;
+  }
+  
+  /* Escurece mais o overlay em dispositivos móveis para melhorar visibilidade */
+  .gradient-overlay {
+    background: linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.7) 0%,
+      rgba(0, 0, 0, 0.6) 50%,
+      rgba(0, 0, 0, 0.7) 100%
+    );
+  }
+}
+
+@media (min-aspect-ratio: 16/9) {
+  .youtube-background iframe {
+    /* Altura mais alta para cobrir a tela */
+    height: 56.25vw;
+  }
+}
+
+@media (max-aspect-ratio: 16/9) {
+  .youtube-background iframe {
+    /* Largura mais ampla para cobrir a tela */
+    width: 177.78vh;
+  }
+}
+
+.content-overlay {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 0 20px;
+  max-width: 800px;
+  animation: fadeIn 1.5s ease-in-out;
+}
+
+.logo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.premium-logo {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+  animation: glow 3s infinite alternate;
+}
+
+@keyframes glow {
+  0% {
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+  }
+  100% {
+    filter: drop-shadow(0 4px 20px rgba(255, 102, 0, 0.7));
+  }
+}
+
+.premium-subtitle {
+  font-family: 'Inter', 'Montserrat', sans-serif;
+  font-weight: 400;
+  font-size: 1.5rem;
+  color: white;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  margin-bottom: 2rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.bible-quote {
+  font-family: 'Inter', 'Montserrat', sans-serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.35rem;
+  color: white;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  margin-bottom: 0.5rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.bible-reference {
+  font-family: 'Inter', 'Montserrat', sans-serif;
+  font-weight: 500;
+  font-size: 1.1rem;
+  color: #FF6600;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  margin-bottom: 2.5rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Estilos para os botões de ação */
+
+.buttons-container {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.premium-button {
+  position: relative;
+  font-family: 'Inter', 'Montserrat', sans-serif;
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 0.875rem 2.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  text-align: center;
+}
+
+.button-buy {
+  background-color: #FF6600; /* Cor laranja do logo RuidCar */
+  color: white;
+  border: none;
+  box-shadow: 0 4px 15px rgba(255, 102, 0, 0.25);
+}
+
+.button-buy:hover {
+  background-color: #E05A00;
+  transform: translateY(-2px);
+  box-shadow: 0 7px 20px rgba(255, 102, 0, 0.45);
+}
+
+.button-locate {
+  background-color: rgba(51, 51, 51, 0.7); /* Cor cinza escuro semitransparente, similar à parte cinza do logo */
+  color: white;
+  border: 2px solid rgba(51, 51, 51, 0.9);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.button-locate:hover {
+  background-color: rgba(51, 51, 51, 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.25);
+  border-color: white;
+}
+
+/* Button animation */
+.premium-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(45deg);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.premium-button:hover::after {
+  animation: shine 1.5s ease forwards;
+}
+
+@keyframes shine {
+  0% {
+    opacity: 0;
+    transform: translateX(-200%) rotate(45deg);
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(200%) rotate(45deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Overlay to enhance text visibility */
+.gradient-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.6) 0%,
+    rgba(0, 0, 0, 0.4) 50%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+  z-index: 0;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .premium-logo {
+    max-width: 260px;
+  }
+  
+  .premium-subtitle {
+    font-size: 1.25rem;
+  }
+  
+  .buttons-container {
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    max-width: 280px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .premium-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .premium-logo {
+    max-width: 220px;
+  }
+  
+  .premium-subtitle {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+  }
+}

@@ -1,0 +1,219 @@
+/* Estilos para o player de vídeo personalizado */
+
+.video-player-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  overflow: hidden;
+  border-radius: 0.5rem;
+}
+
+/* Esconder barra do YouTube */
+.video-player-container iframe {
+  border: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Controles personalizados */
+.video-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.video-player-container:hover .video-controls {
+  opacity: 1;
+}
+
+.video-control-button {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.video-control-button:hover {
+  color: #3b82f6;
+}
+
+.video-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background-color: rgba(255, 255, 255, 0.3);
+  width: 100%;
+  z-index: 2;
+}
+
+.video-progress-filled {
+  background-color: #3b82f6;
+  height: 100%;
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+.video-title {
+  font-size: 14px;
+  color: white;
+  margin-left: 1rem;
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Overlay com controles grandes no centro */
+.video-center-controls {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background-color: rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.video-player-container.paused .video-center-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.video-big-play-button {
+  background-color: rgba(59, 130, 246, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.video-big-play-button:hover {
+  transform: scale(1.1);
+  background-color: rgba(59, 130, 246, 1);
+}
+
+/* Botão de fechar */
+.video-close-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background-color: rgba(0, 0, 0, 0.6);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  z-index: 9999;
+  transition: background-color 0.2s ease;
+}
+
+.video-close-button:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Esconder iframes */
+iframe[src*="youtube.com"],
+iframe[src*="youtube-nocookie.com"] {
+  border: none !important;
+}
+
+/* Remover borda ao redor do iframe em foco */
+iframe:focus {
+  outline: none !important;
+}
+
+iframe[src*="youtube.com"]::-webkit-scrollbar,
+iframe[src*="youtube-nocookie.com"]::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* Classe especial para o iframe do YouTube para sobrepor pelo nosso player customizado */
+.ytp-chrome-top,
+.ytp-chrome-bottom,
+.ytp-watermark,
+.ytp-youtube-button,
+.ytp-title,
+.ytp-share-button,
+.ytp-watch-later-button,
+.ytp-impression-link,
+.ytp-pause-overlay,
+.ytp-endscreen-content {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Estilo para ocultar o botão 'YouTube' no canto */
+.ytp-button[data-tooltip-target-id="ytp-youtube-button"] {
+  display: none !important;
+}
+
+/* Estilo para ocultar o botão 'Assistir mais tarde' */
+.ytp-button[data-tooltip-target-id="ytp-watch-later-button"] {
+  display: none !important;
+}
+
+/* Estilo para ocultar o botão 'Compartilhar' */
+.ytp-button[data-tooltip-target-id="ytp-share-button"] {
+  display: none !important;
+}
+
+/* Estilo para esconder elementos de tela final */
+.ytp-endscreen-content {
+  display: none !important;
+}
+
+/* Aumentando o z-index dos nossos controles para garantir que apareçam acima do player do YouTube */
+.video-player-container .video-controls,
+.video-player-container .video-close-button {
+  z-index: 2147483647; /* O valor mais alto possível para z-index */
+}
+
+/* Correção para previnir elementos do YouTube de ficarem por cima dos nossos controles */
+.video-player-container .YTPlayer {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Melhorando a visibilidade dos controles */
+.video-controls {
+  padding: 1.5rem 1rem 1rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 50%, transparent 100%);
+}

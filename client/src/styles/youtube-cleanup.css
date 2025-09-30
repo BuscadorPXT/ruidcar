@@ -1,0 +1,85 @@
+/* Regras CSS para limpar o player do YouTube */
+
+/* Esconder o título do vídeo */
+.ytp-chrome-top,
+.ytp-title,
+.ytp-title-text,
+.ytp-title-link {
+  display: none !important;
+}
+
+/* Esconder botões desnecessários */
+.ytp-chrome-controls .ytp-button:not(.ytp-play-button):not(.ytp-mute-button):not(.ytp-volume-panel),
+.ytp-chrome-bottom .ytp-chrome-controls .ytp-right-controls button:not(.ytp-play-button):not(.ytp-mute-button):not(.ytp-volume-panel),
+.ytp-watch-later-button,
+.ytp-share-button,
+.ytp-subtitles-button,
+.ytp-playlist-menu-button,
+.ytp-size-button,
+.ytp-autonav-toggle-button,
+.ytp-miniplayer-button,
+.ytp-youtube-button {
+  display: none !important;
+}
+
+/* Esconder logo no player */
+.ytp-chrome-bottom .ytp-youtube-button,
+.ytp-impression-link,
+.ytp-watermark {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Esconder sugestões de vídeos no fim */
+.ytp-pause-overlay-container,
+.ytp-endscreen-content,
+.ytp-ce-element,
+.ytp-ce-covering-overlay,
+.ytp-ce-element-shadow,
+.ytp-ce-covering-image,
+.ytp-ce-expanding-image,
+.ytp-ce-channel,
+.ytp-ce-video,
+.html5-endscreen,
+.ytp-player-content.ytp-iv-player-content,
+.ytp-upnext,
+.ytp-endscreen-previous,
+.ytp-endscreen-next {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Esconder marca d'água e anotações */
+.ytp-watermark,
+.ytp-iv-player-content,
+.annotation,
+.iv-branding,
+.ytp-iv-player-content,
+.ytp-cards-teaser,
+.ytp-cards-button {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Esconder outros elementos indesejados */
+.ytp-suggested-action-badge,
+.ytp-buttons .ytp-button:not(:first-child),
+.ytp-title-channel,
+.ytp-impression-link,
+.ytp-overflow-menu-button,
+.ytp-scroll-min.ytp-pause-overlay,
+.ytp-pause-overlay,
+.ytp-spinner,
+.annotation {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Estilo para o iframe */
+iframe {
+  border: none !important;
+}

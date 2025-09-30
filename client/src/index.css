@@ -1,0 +1,497 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos customizados para o PhoneInput */
+.react-tel-input .form-control {
+  width: 100% !important;
+  height: 40px !important;
+  border-radius: 0.375rem !important;
+  font-size: 1rem !important;
+  border-color: hsl(var(--border)) !important;
+  transition: all 0.2s ease !important;
+}
+
+.react-tel-input .form-control:focus {
+  border-color: hsl(var(--primary)) !important;
+  box-shadow: 0 0 0 2px hsla(var(--primary), 0.3) !important;
+}
+
+.react-tel-input .selected-flag {
+  border-radius: 0.375rem 0 0 0.375rem !important;
+  background-color: hsl(var(--muted)) !important;
+}
+
+.react-tel-input .country-list {
+  border-radius: 0.375rem !important;
+  border-color: hsl(var(--border)) !important;
+  background-color: hsl(var(--popover)) !important;
+  color: hsl(var(--popover-foreground)) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+.react-tel-input .country-list .country.highlight {
+  background-color: hsla(var(--primary), 0.1) !important;
+}
+
+.react-tel-input .country-list .country:hover {
+  background-color: hsla(var(--primary), 0.1) !important;
+}
+
+.phone-input-container {
+  margin-top: 0.25rem;
+}
+
+.phone-input-container .flag-dropdown {
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Estilos para o dropdown do menu de navegação */
+.navbar-dropdown {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  background-color: white;
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  min-width: 180px;
+}
+
+.navbar-dropdown-item {
+  display: block;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  color: hsl(var(--secondary));
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
+}
+
+.navbar-dropdown-item:hover {
+  background-color: hsla(var(--primary), 0.1);
+  color: hsl(var(--primary));
+}
+
+.country-dropdown .search-box {
+  margin: 8px 12px !important;
+}
+
+.country-dropdown .search-box input {
+  width: 100% !important;
+  padding: 8px 12px !important;
+  border-radius: 0.375rem !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 20 14.3% 4.1%;
+  --muted: 60 4.8% 95.9%;
+  --muted-foreground: 25 5.3% 44.7%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 20 14.3% 4.1%;
+  --card: 0 0% 100%;
+  --card-foreground: 20 14.3% 4.1%;
+  --border: 20 5.9% 90%;
+  --input: 20 5.9% 90%;
+  --primary: 24 100% 50%; /* FF5F00 - Orange */
+  --primary-foreground: 0 0% 100%; /* White text on orange */
+  --secondary: 210 4% 29%; /* 4A4A4A - Gray */
+  --secondary-foreground: 0 0% 100%; /* White text on gray */
+  --accent: 60 4.8% 95.9%;
+  --accent-foreground: 24 9.8% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 60 9.1% 97.8%;
+  --ring: 24 100% 50%; /* Orange ring */
+  --radius: 0.5rem;
+  
+  /* Chart colors */
+  --chart-1: 24 100% 50%; /* FF5F00 - Orange */
+  --chart-2: 210 4% 29%; /* 4A4A4A - Gray */
+  --chart-3: 0 0% 0%; /* Black */
+  --chart-4: 0 0% 100%; /* White */
+  --chart-5: 142 71% 45%; /* Success green */
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --primary: 24 100% 50%; /* FF5F00 - Orange */
+  --primary-foreground: 0 0% 100%; /* White text on orange */
+  --secondary: 210 4% 29%; /* 4A4A4A - Gray */ 
+  --secondary-foreground: 0 0% 100%; /* White text on gray */
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 24 100% 50%; /* Orange ring */
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold;
+  }
+}
+
+@layer components {
+  .section-padding {
+    @apply py-16 md:py-20;
+  }
+  
+  .container-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+  
+  .section-title {
+    @apply text-3xl md:text-4xl font-bold text-secondary mb-4;
+  }
+  
+  .section-subtitle {
+    @apply text-lg text-secondary/80 max-w-3xl mx-auto mb-10;
+  }
+  
+  .feature-card {
+    @apply bg-card rounded-xl p-6 hover:shadow-lg transition-shadow;
+  }
+  
+  .card-stats {
+    @apply bg-card p-4 rounded-lg shadow-sm text-center;
+  }
+
+  /* ZincMail-like utilities */
+  .beautiful-shadow {
+    box-shadow: 0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 1px -0.5px rgba(0,0,0,0.06), 0px 3px 3px -1.5px rgba(0,0,0,0.06), 0px 6px 6px -3px rgba(0,0,0,0.06), 0px 12px 12px -6px rgba(0,0,0,0.06), 0px 24px 24px -12px rgba(0,0,0,0.06);
+  }
+
+  .scroll-hide::-webkit-scrollbar { display: none; }
+  .scroll-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .sidebar {
+    width: 320px;
+  }
+  @media (max-width: 768px) {
+    .sidebar { width: 280px; }
+  }
+  @media (max-width: 640px) {
+    .sidebar { width: 100%; max-width: 300px; }
+  }
+}
+
+/* Custom animations */
+@keyframes fadeUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeUp {
+  animation: fadeUp 0.8s ease forwards;
+}
+
+/* Custom slider styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  height: 0.5rem;
+  border-radius: 0.25rem;
+  background: hsl(var(--muted));
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 6px hsl(var(--primary) / 0.1);
+}
+
+/* Custom phone input styling for light/dark mode */
+.dark .react-tel-input .form-control {
+  background-color: hsl(var(--background));
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+
+.dark .react-tel-input .country-list {
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
+}
+
+.dark .react-tel-input .country-list .country {
+  color: hsl(var(--foreground));
+}
+
+.dark .react-tel-input .country-list .country.highlight,
+.dark .react-tel-input .country-list .country:hover {
+  background-color: hsl(var(--accent));
+}
+
+.dark .react-tel-input .selected-flag:hover,
+.dark .react-tel-input .selected-flag:focus {
+  background-color: hsl(var(--muted));
+}
+
+.dark .react-tel-input .selected-flag .arrow {
+  border-top-color: hsl(var(--foreground));
+}
+
+.dark .react-tel-input .country-list .search {
+  background-color: hsl(var(--background));
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+
+/* Navbar dropdown custom styling */
+.navbar-dropdown {
+  @apply bg-card border-border;
+}
+
+.navbar-dropdown-item {
+  @apply hover:bg-accent hover:text-accent-foreground;
+}
+
+/* Section Titles */
+.section-title {
+  @apply text-3xl md:text-4xl font-bold mb-3 text-foreground;
+}
+
+.section-subtitle {
+  @apply text-xl text-muted-foreground max-w-3xl mx-auto;
+}
+
+/* High Contrast Mode Styles - WCAG 2.1 AA/AAA Compliance */
+
+/* High Contrast Mode */
+.high-contrast {
+  --background: 255 255 255; /* Pure white background */
+  --foreground: 0 0 0; /* Pure black text */
+  --card: 248 249 250; /* Light gray for cards */
+  --card-foreground: 0 0 0;
+  --popover: 255 255 255;
+  --popover-foreground: 0 0 0;
+  --primary: 0 86 179; /* High contrast blue */
+  --primary-foreground: 255 255 255;
+  --secondary: 33 37 41; /* Dark gray */
+  --secondary-foreground: 255 255 255;
+  --muted: 233 236 239;
+  --muted-foreground: 73 80 87;
+  --accent: 0 123 255;
+  --accent-foreground: 255 255 255;
+  --destructive: 204 0 0; /* High contrast red */
+  --destructive-foreground: 255 255 255;
+  --border: 0 0 0; /* Black borders */
+  --input: 255 255 255;
+  --ring: 255 102 0; /* Orange focus ring */
+  --success: 0 102 0; /* High contrast green */
+  --warning: 153 102 0; /* High contrast amber */
+}
+
+/* Extra High Contrast Mode (Inverted) */
+.extra-high-contrast {
+  --background: 0 0 0; /* Pure black background */
+  --foreground: 255 255 255; /* Pure white text */
+  --card: 26 26 26; /* Dark gray for cards */
+  --card-foreground: 255 255 255;
+  --popover: 0 0 0;
+  --popover-foreground: 255 255 255;
+  --primary: 0 191 255; /* Bright cyan */
+  --primary-foreground: 0 0 0;
+  --secondary: 240 240 240; /* Light gray */
+  --secondary-foreground: 0 0 0;
+  --muted: 51 51 51;
+  --muted-foreground: 200 200 200;
+  --accent: 255 255 0; /* Bright yellow */
+  --accent-foreground: 0 0 0;
+  --destructive: 255 0 0; /* Bright red */
+  --destructive-foreground: 255 255 255;
+  --border: 255 255 255; /* White borders */
+  --input: 0 0 0;
+  --ring: 255 255 0; /* Yellow focus ring */
+  --success: 0 255 0; /* Bright green */
+  --warning: 255 170 0; /* Bright orange */
+}
+
+/* High contrast specific component overrides */
+.high-contrast *,
+.extra-high-contrast * {
+  /* Ensure all borders are visible */
+  border-color: hsl(var(--border)) !important;
+}
+
+.high-contrast button,
+.extra-high-contrast button {
+  /* Enhanced button visibility */
+  border: 2px solid hsl(var(--border)) !important;
+  font-weight: 600 !important;
+}
+
+.high-contrast button:focus,
+.extra-high-contrast button:focus {
+  /* Enhanced focus states */
+  outline: 3px solid hsl(var(--ring)) !important;
+  outline-offset: 2px !important;
+}
+
+.high-contrast input,
+.high-contrast textarea,
+.high-contrast select,
+.extra-high-contrast input,
+.extra-high-contrast textarea,
+.extra-high-contrast select {
+  /* Enhanced form controls */
+  border: 2px solid hsl(var(--border)) !important;
+  background-color: hsl(var(--input)) !important;
+}
+
+.high-contrast input:focus,
+.high-contrast textarea:focus,
+.high-contrast select:focus,
+.extra-high-contrast input:focus,
+.extra-high-contrast textarea:focus,
+.extra-high-contrast select:focus {
+  /* Enhanced focus for form controls */
+  outline: 3px solid hsl(var(--ring)) !important;
+  outline-offset: 1px !important;
+  box-shadow: 0 0 0 3px hsla(var(--ring), 0.3) !important;
+}
+
+.high-contrast a,
+.extra-high-contrast a {
+  /* Enhanced link visibility */
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 3px !important;
+  font-weight: 600 !important;
+}
+
+.high-contrast a:focus,
+.extra-high-contrast a:focus {
+  /* Enhanced link focus */
+  outline: 3px solid hsl(var(--ring)) !important;
+  outline-offset: 2px !important;
+}
+
+/* Map specific high contrast overrides */
+.high-contrast .leaflet-container,
+.extra-high-contrast .leaflet-container {
+  /* Enhanced map contrast */
+  filter: contrast(1.5) brightness(1.1) !important;
+}
+
+.high-contrast .leaflet-popup-content-wrapper,
+.extra-high-contrast .leaflet-popup-content-wrapper {
+  /* Enhanced popup visibility */
+  border: 3px solid hsl(var(--border)) !important;
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+.high-contrast .leaflet-control,
+.extra-high-contrast .leaflet-control {
+  /* Enhanced map controls */
+  border: 2px solid hsl(var(--border)) !important;
+  background-color: hsl(var(--background)) !important;
+}
+
+/* Toast/notification overrides */
+.high-contrast [data-sonner-toaster],
+.extra-high-contrast [data-sonner-toaster] {
+  /* Enhanced toast visibility */
+  border: 2px solid hsl(var(--border)) !important;
+}
+
+/* Loading states */
+.high-contrast .animate-spin,
+.extra-high-contrast .animate-spin {
+  /* Enhanced loading indicators */
+  border-width: 3px !important;
+  border-color: hsl(var(--primary)) transparent hsl(var(--primary)) transparent !important;
+}
+
+/* Table enhancements */
+.high-contrast table,
+.extra-high-contrast table {
+  border-collapse: separate !important;
+  border-spacing: 1px !important;
+}
+
+.high-contrast th,
+.high-contrast td,
+.extra-high-contrast th,
+.extra-high-contrast td {
+  border: 2px solid hsl(var(--border)) !important;
+  padding: 8px !important;
+}
+
+/* Card component enhancements */
+.high-contrast .card,
+.extra-high-contrast .card {
+  border: 2px solid hsl(var(--border)) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Badge enhancements */
+.high-contrast .badge,
+.extra-high-contrast .badge {
+  border: 2px solid hsl(var(--border)) !important;
+  font-weight: 700 !important;
+}
+
+/* Motion preferences - respect user settings */
+@media (prefers-reduced-motion: reduce) {
+  .high-contrast *,
+  .extra-high-contrast * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print styles for high contrast */
+@media print {
+  .high-contrast *,
+  .extra-high-contrast * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Leaflet z-index adjustments to keep UI overlays above the map */
+.leaflet-container {
+  z-index: 0 !important;
+}
+
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom,
+.leaflet-control-container {
+  z-index: 10 !important;
+}
+
+.leaflet-tooltip-pane,
+.leaflet-popup-pane {
+  z-index: 20 !important;
+}

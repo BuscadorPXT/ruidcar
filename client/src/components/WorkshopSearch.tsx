@@ -1,0 +1,160 @@
+import { useState, useEffect } from "react";
+import { Search, MapPin, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { useDebounce } from "@/hooks/use-debounce";
+
+interface WorkshopSearchProps {
+  onSearch: (query: string) => Promise<void>;
+  onNearbySearch: () => void;
+  isLoading?: boolean;
+  isGeolocating?: boolean;
+  searchQuery?: string; // Current search query from URL state
+}
+
+export default function WorkshopSearch({ onSearch, onNearbySearch, isLoading, isGeolocating, searchQuery: externalSearchQuery = "" }: WorkshopSearchProps) {
+  const [localSearchQuery, setLocalSearchQuery] = useState(externalSearchQuery);
+  const [isSearching, setIsSearching] = useState(false);
+  const { toast } = useToast();
+
+  // Sync local state with external search query from URL
+  useEffect(() => {
+    setLocalSearchQuery(externalSearchQuery);
+  }, [externalSearchQuery]);
+
+  // Debounce search query to avoid excessive API calls
+  const debouncedSearchQuery = useDebounce(localSearchQuery, 500);
+
+  // Auto-search when debounced query changes (and is not empty)
+  useEffect(() => {
+    if (debouncedSearchQuery.trim() && debouncedSearchQuery.length > 2) {
+      performSearch(debouncedSearchQuery);
+    }
+  }, [debouncedSearchQuery]);
+
+  const performSearch = async (query: string) => {
+    if (!query.trim()) {
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      await onSearch(query);
+    } catch (error) {
+      toast({
+        title: "Erro na busca",
+        description: "Ocorreu um erro ao realizar a busca. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!localSearchQuery.trim()) {
+      toast({
+        title: "Digite uma busca",
+        description: "Por favor, digite o que você está procurando (mínimo 3 caracteres)",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Força busca imediatamente (sem debounce) quando enviado via formulário
+    await performSearch(localSearchQuery);
+  };
+
+  const placeholders = [
+    "Onde tem RuidCar em São Paulo?",
+    "Oficinas em Minas Gerais",
+    "RuidCar perto de mim",
+    "Oficinas no Rio de Janeiro",
+    "Buscar por cidade ou estado..."
+  ];
+
+  return (
+    <div className="w-full max-w-3xl mx-auto space-y-4">
+      <form onSubmit={handleSearch} className="flex gap-2" role="search" aria-label="Buscar oficinas credenciadas">
+        <div className="relative flex-1">
+          <label htmlFor="workshop-search" className="sr-only">
+            Buscar oficinas por nome, cidade ou estado
+          </label>
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Input
+            id="workshop-search"
+            type="text"
+            value={localSearchQuery}
+            onChange={(e) => setLocalSearchQuery(e.target.value)}
+            placeholder={placeholders[0]}
+            className="pl-10 pr-4 h-12 text-base"
+            disabled={isLoading || isSearching}
+            aria-describedby="search-help"
+            aria-label="Campo de busca de oficinas"
+            autoComplete="off"
+          />
+          {(isSearching || isLoading) && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-hidden="true" />
+            </div>
+          )}
+        </div>
+        <Button
+          type="submit"
+          size="lg"
+          disabled={isLoading || isSearching || localSearchQuery.length < 3}
+          className="px-6"
+          aria-label={isSearching ? "Buscando oficinas..." : "Buscar oficinas"}
+        >
+          {isSearching ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
+              Buscando...
+            </>
+          ) : (
+            <>
+              <Search className="h-4 w-4 mr-2" aria-hidden="true" />
+              Buscar
+            </>
+          )}
+        </Button>
+      </form>
+
+      <div className="flex items-center justify-center">
+        <Button
+          variant="outline"
+          onClick={onNearbySearch}
+          disabled={isLoading || isGeolocating}
+          className="flex items-center gap-2 focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          aria-label={isGeolocating ? "Obtendo sua localização..." : "Buscar oficinas próximas à sua localização atual"}
+        >
+          {isGeolocating ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              Localizando...
+            </>
+          ) : (
+            <>
+              <MapPin className="h-4 w-4" aria-hidden="true" />
+              Oficinas próximas a mim
+            </>
+          )}
+        </Button>
+      </div>
+
+      <div className="text-center">
+        <p id="search-help" className="text-sm text-muted-foreground">
+          🔍 <strong>Busca automática</strong>: Digite 3+ caracteres para buscar automaticamente<br />
+          📍 <strong>Localização</strong>: Permita acesso para encontrar oficinas próximas<br />
+          💭 Exemplos: "oficinas em SP", "RuidCar no Paraná", "oficinas perto de Brasília"
+        </p>
+      </div>
+    </div>
+  );
+}

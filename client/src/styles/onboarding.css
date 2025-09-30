@@ -1,0 +1,72 @@
+/* Ensure onboarding tour stays above all other elements */
+.onboarding-tour-overlay {
+  z-index: 9999 !important;
+  -webkit-transform: translateZ(0); /* Fix Safari rendering issues */
+  transform: translateZ(0);
+}
+
+.onboarding-tour-tooltip {
+  z-index: 10000 !important;
+  -webkit-transform: translateZ(0); /* Fix Safari rendering issues */
+  transform: translateZ(0);
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 640px) {
+  .onboarding-tour-card {
+    margin: 10px;
+    max-height: 80vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  }
+
+  .onboarding-tour-card::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .onboarding-tour-card::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .onboarding-tour-card::-webkit-scrollbar-thumb {
+    background: rgba(255, 102, 0, 0.3);
+    border-radius: 2px;
+  }
+}
+
+/* Smooth transitions for spotlight */
+.onboarding-spotlight {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ensure the target element is interactive */
+.onboarding-target-active {
+  position: relative;
+  z-index: 9998 !important;
+}
+
+/* Animation for tooltip entrance */
+@keyframes tooltipEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.onboarding-tooltip-animate {
+  -webkit-animation: tooltipEnter 0.3s ease-out;
+  animation: tooltipEnter 0.3s ease-out;
+}
+
+/* Safari-specific fixes */
+@supports (-webkit-touch-callout: none) {
+  .onboarding-tour-overlay,
+  .onboarding-tour-tooltip {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+}

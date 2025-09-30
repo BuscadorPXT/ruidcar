@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    
+    <!-- SEO Meta Tags -->
+    <title>RUIDCAR - O equipamento que vai mudar a sua empresa</title>
+    <meta name="description" content="Soluções avançadas de diagnóstico automotivo para sua oficina. Aumente sua produtividade e precisão com o RUIDCAR." />
+    <meta name="keywords" content="RUIDCAR, diagnóstico automotivo, oficina mecânica, detecção de ruídos, ferramenta automotiva" />
+    <meta name="author" content="RUIDCAR" />
+    
+    <!-- Open Graph / Facebook Meta Tags (para compartilhamento) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ruidcar.com.br/" />
+    <meta property="og:title" content="RUIDCAR - O equipamento que vai mudar a sua empresa" />
+    <meta property="og:description" content="Soluções avançadas de diagnóstico automotivo para oficinas. Aumente sua produtividade e precisão com o RUIDCAR." />
+    <meta property="og:image" content="https://ruidcar.com.br/assets/logo.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="RUIDCAR" />
+    <meta property="og:locale" content="pt_BR" />
+    
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://ruidcar.com.br/" />
+    <meta name="twitter:title" content="RUIDCAR - O equipamento que vai mudar a sua empresa" />
+    <meta name="twitter:description" content="Soluções avançadas de diagnóstico automotivo para oficinas. Aumente sua produtividade e precisão com o RUIDCAR." />
+    <meta name="twitter:image" content="https://ruidcar.com.br/assets/logo.png" />
+    <meta name="twitter:site" content="@ruidcar" />
+    
+    <!-- Canonical Link -->
+    <link rel="canonical" href="https://ruidcar.com.br/" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/logo.png" />
+    <link rel="apple-touch-icon" href="/assets/logo.png" />
+    
+    <!-- Estruturação de dados para SEO (Schema.org) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "RUIDCAR",
+      "url": "https://ruidcar.com.br",
+      "logo": "https://ruidcar.com.br/assets/logo.png",
+      "description": "O equipamento diagnóstico que vai mudar a sua empresa. Soluções avançadas de diagnóstico automotivo para oficinas mecânicas.",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "BR"
+      },
+      "sameAs": [
+        "https://www.instagram.com/ruidcar/",
+        "https://www.facebook.com/ruidcar/",
+        "https://www.youtube.com/ruidcar"
+      ]
+    }
+    </script>
+    
+    <!-- Meta Pixel Code -->
+    <script>
+    (function(){
+      try {
+        var isAdmin = location && location.pathname && location.pathname.startsWith('/admin');
+        if (isAdmin) {
+          console.log('Meta Pixel desabilitado no admin.');
+          return;
+        }
+      } catch (e) {}
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '291023709972336');
+      fbq('track', 'PageView');
+    })();
+    </script>
+    <!-- End Meta Pixel Code -->
+    
+    <!-- API do YouTube para controle avançado do player -->
+    <script type="text/javascript" src="https://www.youtube.com/iframe_api"></script>
+    
+    <!-- Preconnect para melhorar performance -->
+    <link rel="preconnect" href="https://www.youtube.com" />
+    <link rel="preconnect" href="https://www.google-analytics.com" crossorigin />
+    <link rel="dns-prefetch" href="https://www.youtube.com" />
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0HEJ849BB6"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-0HEJ849BB6');
+    </script>
+  </head>
+  <body>
+    <!-- Meta Pixel noscript -->
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=291023709972336&ev=PageView&noscript=1"
+    /></noscript>
+    
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
+    <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
+  </body>
+</html>

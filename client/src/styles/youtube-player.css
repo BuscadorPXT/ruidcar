@@ -1,0 +1,49 @@
+/* Estilos personalizados para o player do YouTube */
+.youtube-player {
+  border: none;
+  outline: none;
+}
+
+/* Ocultar elementos desnecessários do player */
+.youtube-player::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Esconde o logotipo e alguns controles extras */
+.youtube-player::-webkit-media-controls-panel {
+  display: flex !important;
+  justify-content: center !important;
+}
+
+.youtube-player::-webkit-media-controls-enclosure {
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+/* Estilizar os controles que queremos exibir */
+.youtube-player::-webkit-media-controls-play-button,
+.youtube-player::-webkit-media-controls-timeline,
+.youtube-player::-webkit-media-controls-current-time-display,
+.youtube-player::-webkit-media-controls-time-remaining-display,
+.youtube-player::-webkit-media-controls-seek-back-button,
+.youtube-player::-webkit-media-controls-seek-forward-button {
+  display: block !important;
+}
+
+/* Esconder outros controles */
+.youtube-player::-webkit-media-controls-mute-button,
+.youtube-player::-webkit-media-controls-volume-slider,
+.youtube-player::-webkit-media-controls-toggle-closed-captions-button,
+.youtube-player::-webkit-media-controls-fullscreen-button,
+.youtube-player::-webkit-media-controls-rewind-button,
+.youtube-player::-webkit-media-controls-return-to-realtime-button,
+.youtube-player::-webkit-media-controls-timeline-container {
+  display: none !important;
+}

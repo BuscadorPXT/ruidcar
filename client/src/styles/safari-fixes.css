@@ -1,0 +1,151 @@
+/* Safari-specific fixes for mobile and desktop */
+
+/* Reset for Safari mobile to prevent white screen issues */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific styles */
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    -webkit-font-smoothing: antialiased;
+    -webkit-overflow-scrolling: touch;
+    /* Prevent Safari from applying its own styles */
+    -webkit-appearance: none;
+  }
+
+  /* Fix for position fixed elements in Safari */
+  .fixed {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  /* Prevent white screen on Safari when using high z-index */
+  [class*="z-"] {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+
+  /* Fix for backdrop blur in Safari */
+  .backdrop-blur,
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg {
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* Fix for animations in Safari */
+  [class*="animate-"],
+  .motion-safe\:animate-* {
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
+  }
+
+  /* Prevent layout shifts in Safari */
+  * {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+  }
+
+  /* Fix for flex items in Safari */
+  .flex,
+  [class*="flex-"] {
+    -webkit-flex-shrink: 0;
+    flex-shrink: 0;
+  }
+
+  /* Fix overflow issues in Safari mobile */
+  .overflow-hidden {
+    -webkit-overflow-scrolling: auto !important;
+  }
+
+  /* Fix for modal/dialog overlays */
+  .fixed.inset-0 {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  /* Ensure proper rendering of high z-index elements */
+  [style*="z-index"] {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-perspective: 1000;
+    perspective: 1000;
+  }
+}
+
+/* Additional iOS-specific fixes */
+@supports (-webkit-overflow-scrolling: touch) {
+  /* Prevent bounce scrolling on body */
+  html, body {
+    overscroll-behavior: none;
+  }
+
+  /* Fix for input focus zoom on iOS */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* Prevent Safari from changing button styles */
+  button,
+  input[type="button"],
+  input[type="submit"] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
+/* Safari desktop specific fixes */
+@media not all and (pointer: coarse) {
+  @supports (-webkit-appearance: none) and (stroke-color: transparent) {
+    /* Fix for Safari desktop rendering issues */
+    .fixed,
+    .absolute,
+    .relative {
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+    }
+  }
+}
+
+/* Prevent white flash on page load in Safari */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  body {
+    -webkit-animation: safariLoadFix 0.1s;
+    animation: safariLoadFix 0.1s;
+  }
+
+  @-webkit-keyframes safariLoadFix {
+    0% { opacity: 0.99; }
+    100% { opacity: 1; }
+  }
+
+  @keyframes safariLoadFix {
+    0% { opacity: 0.99; }
+    100% { opacity: 1; }
+  }
+}
+
+/* Fix for Safari mobile viewport height */
+@supports (-webkit-touch-callout: none) {
+  .h-screen {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
+
+  .min-h-screen {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+}

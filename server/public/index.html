@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RuidCar - Equipamentos Automotivos Profissionais</title>
+    <!-- Favicon -->
+    <link rel="icon" href="https://ruidcar.com.br/public/assets/logo.png" type="image/png">
+    <!-- Meta tags -->
+    <meta name="description" content="A RuidCar é especializada em equipamentos para funilaria de automóveis, oferecendo tecnologia avançada para profissionais do setor automotivo.">
+    <meta name="keywords" content="RuidCar, equipamentos automotivos, funilaria, reparação automotiva, tecnologia automotiva">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #f97316;
+            --light: #f8fafc;
+            --dark: #0f172a;
+            --gray: #64748b;
+            --gray-light: #f1f5f9;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #fafafa;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo img {
+            height: 40px;
+            margin-right: 10px;
+        }
+        
+        .logo h1 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .contact-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .contact-info a {
+            color: var(--primary);
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+        
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+        
+        .hero {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://ruidcar.com.br/public/img/ruidcar-main.jpg');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 160px 0 100px;
+            text-align: center;
+        }
+        
+        .hero h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 30px;
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: var(--secondary);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 5px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background-color: #e15a00;
+            transform: translateY(-2px);
+        }
+        
+        .features {
+            padding: 80px 0;
+            background-color: white;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 50px;
+            color: var(--dark);
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .feature-card {
+            background-color: var(--gray-light);
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 50%;
+            font-size: 30px;
+        }
+        
+        .feature-title {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        
+        .gallery {
+            padding: 80px 0;
+            background-color: var(--gray-light);
+        }
+        
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .gallery-item {
+            height: 250px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+        
+        .cta {
+            padding: 100px 0;
+            background-color: var(--primary);
+            color: white;
+            text-align: center;
+        }
+        
+        .cta h2 {
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+        }
+        
+        .cta p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 30px;
+        }
+        
+        .btn-white {
+            background-color: white;
+            color: var(--primary);
+        }
+        
+        .btn-white:hover {
+            background-color: var(--gray-light);
+        }
+        
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 60px 0 30px;
+        }
+        
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-col h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: var(--secondary);
+        }
+        
+        .footer-col p, .footer-col a {
+            margin-bottom: 10px;
+            color: #cbd5e1;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .footer-col a:hover {
+            color: white;
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid #334155;
+            color: #94a3b8;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .social-links a {
+            color: white;
+            background-color: #334155;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .social-links a:hover {
+            background-color: var(--secondary);
+            transform: translateY(-3px);
+        }
+        
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .logo {
+                margin-bottom: 15px;
+            }
+            
+            .contact-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .contact-info a {
+                margin-left: 0;
+            }
+            
+            .hero {
+                padding: 140px 0 80px;
+            }
+            
+            .hero h2 {
+                font-size: 2rem;
+            }
+            
+            .gallery-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <img src="https://ruidcar.com.br/public/assets/logo.png" alt="RuidCar Logo">
+                <h1>RuidCar</h1>
+            </div>
+            <div class="contact-info">
+                <a href="https://wa.me/554999992055" id="wpp-link">(49) 9 9999-2055</a>
+                <a href="mailto:comercial@ruidcar.com.br" id="email-link">comercial@ruidcar.com.br</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h2>Equipamentos Automotivos de Alta Performance</h2>
+            <p>A RuidCar oferece soluções avançadas para reparo automotivo, combinando inovação tecnológica com durabilidade e eficiência.</p>
+            <a href="https://wa.me/554999992055" class="btn">Solicite um Orçamento</a>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">Por que escolher a RuidCar?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">★</div>
+                    <h3 class="feature-title">Tecnologia Exclusiva</h3>
+                    <p>Sistemas patenteados que garantem maior eficiência e precisão nos reparos automotivos.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✓</div>
+                    <h3 class="feature-title">Qualidade Comprovada</h3>
+                    <p>Equipamentos duráveis e confiáveis, projetados para uso intenso em oficinas profissionais.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">♻</div>
+                    <h3 class="feature-title">Suporte Técnico</h3>
+                    <p>Assistência completa com profissionais especializados e peças de reposição originais.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="gallery">
+        <div class="container">
+            <h2 class="section-title">Nossos Produtos</h2>
+            <div class="gallery-grid">
+                <div class="gallery-item">
+                    <img src="https://ruidcar.com.br/public/img/ruidcar-blue.jpg" alt="RuidCar Blue Model">
+                </div>
+                <div class="gallery-item">
+                    <img src="https://ruidcar.com.br/public/img/ruidcar-gray.jpg" alt="RuidCar Gray Model">
+                </div>
+                <div class="gallery-item">
+                    <img src="https://ruidcar.com.br/public/img/ruidcar-orange.jpg" alt="RuidCar Orange Model">
+                </div>
+                <div class="gallery-item">
+                    <img src="https://ruidcar.com.br/public/img/ruidcar-red.jpg" alt="RuidCar Red Model">
+                </div>
+                <div class="gallery-item">
+                    <img src="https://ruidcar.com.br/public/img/ruidcar-dual.jpg" alt="RuidCar Dual System">
+                </div>
+                <div class="gallery-item">
+                    <img src="https://ruidcar.com.br/public/img/ruidcar-painel.jpg" alt="RuidCar Control Panel">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta">
+        <div class="container">
+            <h2>Transforme sua oficina com equipamentos RuidCar</h2>
+            <p>Entre em contato conosco para conhecer nossas soluções e melhorar a eficiência do seu negócio.</p>
+            <a href="https://wa.me/554999992055" class="btn btn-white">Fale com um Especialista</a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h3>RuidCar</h3>
+                    <p>Empresa especializada em equipamentos para reparação automotiva, com foco em tecnologia e qualidade.</p>
+                </div>
+                <div class="footer-col">
+                    <h3>Contato</h3>
+                    <p>Telefone: (49) 9 9999-2055</p>
+                    <p>Email: comercial@ruidcar.com.br</p>
+                </div>
+                <div class="footer-col">
+                    <h3>Links Rápidos</h3>
+                    <a href="#produtos">Produtos</a>
+                    <a href="#sobre">Sobre Nós</a>
+                    <a href="#contato">Contato</a>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 RuidCar - Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Script para detecção de país e ajuste de WhatsApp
+        window.addEventListener('load', function() {
+            // Função para detectar país (simplificada)
+            function detectCountry() {
+                // Por padrão, considera Brasil
+                let isBrazil = true;
+                
+                // Verifica o idioma do navegador
+                const languages = [
+                    navigator.language,
+                    ...(navigator.languages || [])
+                ].map(lang => (lang || '').toLowerCase());
+                
+                // Se qualquer um dos idiomas for português ou contiver 'br', consideramos Brasil
+                isBrazil = languages.some(lang => 
+                    lang.startsWith('pt') || 
+                    lang.includes('br') || 
+                    lang === 'pt-br'
+                );
+                
+                return isBrazil;
+            }
+            
+            // Configurações de contato
+            const brWhatsApp = {
+                number: "(49) 9 9999-2055",
+                link: "https://wa.me/554999992055",
+                showEmail: true
+            };
+            
+            const intWhatsApp = {
+                number: "+55 49 8886-2954",
+                link: "https://wa.me/5549988862954",
+                showEmail: false
+            };
+            
+            // Detecta país e atualiza links
+            const isBrazil = detectCountry();
+            const contactInfo = isBrazil ? brWhatsApp : intWhatsApp;
+            
+            // Atualiza link de WhatsApp
+            const wppLinks = document.querySelectorAll('#wpp-link');
+            wppLinks.forEach(link => {
+                link.href = contactInfo.link;
+                link.textContent = contactInfo.number;
+            });
+            
+            // Atualiza visibilidade do email
+            const emailLink = document.getElementById('email-link');
+            if (emailLink) {
+                emailLink.style.display = contactInfo.showEmail ? 'inline-block' : 'none';
+            }
+        });
+    </script>
+</body>
+</html>
