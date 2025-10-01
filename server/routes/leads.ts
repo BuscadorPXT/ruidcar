@@ -572,7 +572,7 @@ export async function getLeadDashboard(req: Request, res: Response) {
       },
       conversion: {
         daily: dailyData.rows.map((row: any) => ({
-          date: typeof row.date === 'string' ? row.date : new Date(row.date).toISOString().split('T')[0],
+          date: typeof row.date === 'string' ? row.date : (row.date ? new Date(row.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]),
           leads: parseInt(row.leads),
           conversions: parseInt(row.conversions),
           rate: parseFloat(row.rate) || 0
@@ -610,7 +610,7 @@ export async function getLeadDashboard(req: Request, res: Response) {
       },
       trends: {
         historical: dailyData.rows.map((row: any) => ({
-          date: typeof row.date === 'string' ? row.date : new Date(row.date).toISOString().split('T')[0],
+          date: typeof row.date === 'string' ? row.date : (row.date ? new Date(row.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]),
           leads: parseInt(row.leads),
           conversions: parseInt(row.conversions),
           conversionRate: parseFloat(row.rate) || 0,

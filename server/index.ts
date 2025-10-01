@@ -13,12 +13,14 @@ const app = express();
 // Configuração CORS simples para desenvolvimento
 const corsOptions = {
   origin: function(origin: any, callback: any) {
-    // Permitir localhost em desenvolvimento
+    // Permitir localhost em desenvolvimento e domínio de produção
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:5173',
       'http://127.0.0.1:3000',
-      'http://127.0.0.1:5173'
+      'http://127.0.0.1:5173',
+      'https://ruidcar.com.br',
+      'https://www.ruidcar.com.br'
     ];
 
     // Se não há origin (mesma origem) ou está na lista, permitir
