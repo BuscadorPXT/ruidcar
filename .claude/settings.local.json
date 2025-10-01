@@ -56,7 +56,8 @@
       "Bash(rm:*)",
       "Bash(mkdir:*)",
       "Bash(mv:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

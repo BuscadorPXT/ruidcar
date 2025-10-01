@@ -558,33 +558,34 @@ export async function getLeadDashboard(req: Request, res: Response) {
     `);
 
     // Format response
+    const currentRow = currentMetrics.rows[0] as any;
     const response = {
       metrics: {
-        totalLeads: parseInt(currentMetrics.rows[0].total_leads) || 0,
-        newLeads: parseInt(currentMetrics.rows[0].new_leads) || 0,
-        conversions: parseInt(currentMetrics.rows[0].conversions) || 0,
-        conversionRate: parseFloat(currentMetrics.rows[0].conversion_rate) || 0,
-        avgResponseTime: parseInt(currentMetrics.rows[0].avg_response_time) || 0,
-        avgDealSize: parseFloat(currentMetrics.rows[0].avg_deal_size) || 0,
-        totalRevenue: parseFloat(currentMetrics.rows[0].total_revenue) || 0,
-        leadVelocity: parseFloat(currentMetrics.rows[0].lead_velocity) || 0,
+        totalLeads: parseInt(currentRow.total_leads) || 0,
+        newLeads: parseInt(currentRow.new_leads) || 0,
+        conversions: parseInt(currentRow.conversions) || 0,
+        conversionRate: parseFloat(currentRow.conversion_rate) || 0,
+        avgResponseTime: parseInt(currentRow.avg_response_time) || 0,
+        avgDealSize: parseFloat(currentRow.avg_deal_size) || 0,
+        totalRevenue: parseFloat(currentRow.total_revenue) || 0,
+        leadVelocity: parseFloat(currentRow.lead_velocity) || 0,
       },
       conversion: {
-        daily: dailyData.rows.map(row => ({
-          date: row.date.toISOString().split('T')[0],
+        daily: dailyData.rows.map((row: any) => ({
+          date: typeof row.date === 'string' ? row.date : new Date(row.date).toISOString().split('T')[0],
           leads: parseInt(row.leads),
           conversions: parseInt(row.conversions),
           rate: parseFloat(row.rate) || 0
         })),
         summary: {
-          totalLeads: parseInt(currentMetrics.rows[0].total_leads) || 0,
-          totalConversions: parseInt(currentMetrics.rows[0].conversions) || 0,
-          overallRate: parseFloat(currentMetrics.rows[0].conversion_rate) || 0,
+          totalLeads: parseInt(currentRow.total_leads) || 0,
+          totalConversions: parseInt(currentRow.conversions) || 0,
+          overallRate: parseFloat(currentRow.conversion_rate) || 0,
           trend: 5.2
         }
       },
       pipeline: {
-        stages: pipelineData.rows.map(row => ({
+        stages: pipelineData.rows.map((row: any) => ({
           name: row.name,
           count: parseInt(row.count),
           percentage: parseFloat(row.percentage) || 0,
@@ -592,7 +593,7 @@ export async function getLeadDashboard(req: Request, res: Response) {
           color: getStatusColor(row.name as string)
         })),
         distribution: {
-          total: parseInt(currentMetrics.rows[0].total_leads) || 0,
+          total: parseInt(currentRow.total_leads) || 0,
           byStage: pipelineData.rows.reduce((acc: any, row: any) => {
             acc[row.name] = parseInt(row.count);
             return acc;
@@ -600,7 +601,7 @@ export async function getLeadDashboard(req: Request, res: Response) {
         }
       },
       sources: {
-        sources: sourceData.rows.map(row => ({
+        sources: sourceData.rows.map((row: any) => ({
           name: row.name,
           value: parseInt(row.value),
           percentage: parseFloat(row.percentage) || 0,
@@ -608,8 +609,8 @@ export async function getLeadDashboard(req: Request, res: Response) {
         }))
       },
       trends: {
-        historical: dailyData.rows.map(row => ({
-          date: row.date.toISOString().split('T')[0],
+        historical: dailyData.rows.map((row: any) => ({
+          date: typeof row.date === 'string' ? row.date : new Date(row.date).toISOString().split('T')[0],
           leads: parseInt(row.leads),
           conversions: parseInt(row.conversions),
           conversionRate: parseFloat(row.rate) || 0,
@@ -639,11 +640,11 @@ export async function getLeadDashboard(req: Request, res: Response) {
           badges: []
         })),
         teamStats: {
-          avgConversionRate: parseFloat(currentMetrics.rows[0].conversion_rate) || 0,
-          totalRevenue: parseFloat(currentMetrics.rows[0].total_revenue) || 0,
-          totalLeads: parseInt(currentMetrics.rows[0].total_leads) || 0,
-          totalConversions: parseInt(currentMetrics.rows[0].conversions) || 0,
-          topPerformerName: teamData.rows[0]?.name || 'N/A',
+          avgConversionRate: parseFloat(currentRow.conversion_rate) || 0,
+          totalRevenue: parseFloat(currentRow.total_revenue) || 0,
+          totalLeads: parseInt(currentRow.total_leads) || 0,
+          totalConversions: parseInt(currentRow.conversions) || 0,
+          topPerformerName: (teamData.rows[0] as any)?.name || 'N/A',
           mostImprovedName: 'N/A'
         }
       }
