@@ -30,30 +30,16 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Vendor chunks
+          // Vendor chunks - estratégia simplificada
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'vendor';
+            // Separar apenas mapas (muito grandes)
+            if (id.includes('leaflet') && !id.includes('react-leaflet')) {
+              return 'vendor-maps';
             }
-            if (id.includes('wouter')) {
-              return 'router';
-            }
-            if (id.includes('@tanstack/react-query')) {
-              return 'query';
-            }
-            if (id.includes('@radix-ui')) {
-              return 'ui';
-            }
-            if (id.includes('lucide-react')) {
-              return 'icons';
-            }
-            if (id.includes('date-fns')) {
-              return 'dates';
-            }
-            if (id.includes('leaflet')) {
-              return 'maps';
-            }
-            return 'vendor-misc';
+
+            // TODO O RESTO EM UM ÚNICO CHUNK VENDOR
+            // Isso garante que React e todas as dependências estejam juntas
+            return 'vendor';
           }
 
           // Feature chunks baseados no caminho do arquivo

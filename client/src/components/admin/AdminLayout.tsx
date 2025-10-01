@@ -161,12 +161,6 @@ const baseNavigation: NavigationItem[] = [
     icon: MapPin,
     description: 'Ver mapa público',
     external: true
-  },
-  {
-    name: 'Estatísticas',
-    href: '/admin/stats',
-    icon: BarChart3,
-    description: 'Relatórios'
   }
 ];
 
