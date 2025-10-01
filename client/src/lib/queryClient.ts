@@ -46,12 +46,53 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      refetchOnWindowFocus: true, // Reativa para melhor UX
+      staleTime: 5 * 60 * 1000, // 5 minutos (era Infinity)
+      gcTime: 10 * 60 * 1000, // 10 minutos para garbage collection
+      retry: (failureCount, error: any) => {
+        // Não retry em erros 4xx (cliente)
+        if (error?.status >= 400 && error?.status < 500) {
+          return false;
+        }
+        // Retry até 2 vezes para erros de rede/servidor
+        return failureCount < 2;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
     },
     mutations: {
-      retry: false,
+      retry: (failureCount, error: any) => {
+        // Não retry mutações por segurança
+        return false;
+      },
     },
   },
 });
+
+// Configurações específicas por tipo de query
+export const getQueryOptions = {
+  // Dados que mudam frequentemente (leads, notificações)
+  realTime: {
+    staleTime: 30 * 1000, // 30 segundos
+    refetchInterval: 60 * 1000, // 1 minuto em background
+  },
+
+  // Dados que mudam moderadamente (workshops, usuários)
+  moderate: {
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    refetchOnWindowFocus: true,
+  },
+
+  // Dados relativamente estáticos (configurações, constantes)
+  static: {
+    staleTime: 30 * 60 * 1000, // 30 minutos
+    refetchOnWindowFocus: false,
+    gcTime: 60 * 60 * 1000, // 1 hora
+  },
+
+  // Dados de autenticação (cache mais agressivo)
+  auth: {
+    staleTime: 15 * 60 * 1000, // 15 minutos
+    refetchOnWindowFocus: true,
+    retry: 1, // Retry apenas 1 vez
+  }
+};

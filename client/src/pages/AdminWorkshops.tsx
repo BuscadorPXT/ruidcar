@@ -51,6 +51,7 @@ import WorkshopForm from '@/components/admin/WorkshopForm';
 import { useToast } from '@/hooks/use-toast';
 import { type Workshop } from '@shared/schema';
 import { BRAZILIAN_STATES, STATE_NAMES } from '@shared/constants';
+import { WorkshopListLoading } from '@/components/ui/loading';
 
 interface WorkshopsResponse {
   workshops: Workshop[];
@@ -228,23 +229,7 @@ export default function AdminWorkshops() {
   if (loading && workshops.length === 0) {
     return (
       <AdminLayout>
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Gerenciar Oficinas</h1>
-            <Button disabled>
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Oficina
-            </Button>
-          </div>
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-center">
-                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                <p>Carregando oficinas...</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <WorkshopListLoading />
       </AdminLayout>
     );
   }

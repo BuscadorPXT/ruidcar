@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, memo } from 'react';
 import { Link, useLocation } from 'wouter';
 import {
   Home,
@@ -21,6 +21,8 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useLeadSocket } from '@/hooks/useLeadSocket';
+import { AuthLoading } from '@/components/ui/loading';
+import { useAutoPrefetch, useHoverPrefetch } from '@/hooks/use-prefetch';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -42,6 +44,66 @@ interface NavigationItem {
   external?: boolean;
   badge?: string;
 }
+
+// Componente NavigationItem memoizado para evitar re-renders
+const NavigationItem = memo<{
+  item: NavigationItem;
+  isCurrentPath: (href: string) => boolean;
+  onClick: () => void;
+  newLeadsCount: number;
+  onHover: (href: string) => void;
+}>(({ item, isCurrentPath, onClick, newLeadsCount, onHover }) => {
+  const Icon = item.icon;
+  const isCurrent = !item.external && isCurrentPath(item.href);
+
+  if (item.external) {
+    return (
+      <li key={item.name}>
+        <a
+          href={item.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 px-4 py-3 mx-2 rounded-xl transition-colors text-zinc-700 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+        >
+          <Icon className="h-4 w-4" />
+          <span>{item.name}</span>
+        </a>
+      </li>
+    );
+  }
+
+  return (
+    <li key={item.name}>
+      <Link href={item.href}>
+        <div
+          className={`
+            flex items-center gap-3 px-4 py-3 mx-2 text-sm font-medium rounded-xl transition-colors cursor-pointer
+            ${isCurrent
+              ? 'bg-gradient-to-r from-zinc-200 to-zinc-300 text-zinc-900 dark:from-zinc-700 dark:to-zinc-800 dark:text-zinc-100 beautiful-shadow'
+              : 'text-zinc-700 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
+            }
+          `}
+          onClick={onClick}
+          onMouseEnter={() => onHover(item.href)}
+          role="link"
+          aria-current={isCurrent ? 'page' : undefined}
+        >
+          <Icon className="h-4 w-4" />
+          <span>{item.name}</span>
+          {item.badge && (
+            <Badge
+              variant={item.name === 'Leads' ? 'default' : 'secondary'}
+              className={`ml-auto text-xs ${item.name === 'Leads' && newLeadsCount > 0 ? 'animate-pulse bg-red-500 text-white' : ''}`}
+            >
+              {item.badge}
+            </Badge>
+          )}
+        </div>
+      </Link>
+    </li>
+  );
+});
+NavigationItem.displayName = 'NavigationItem';
 
 const baseNavigation: NavigationItem[] = [
   {
@@ -113,15 +175,32 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState<AdminUser | null>(null);
   const { toast } = useToast();
-  const { newLeadsCount } = useLeadSocket();
+  const { newLeadsCount, enableRealTime, shouldConnect } = useLeadSocket();
+  const { handleMouseEnter } = useHoverPrefetch();
 
-  // Create navigation with dynamic badge
-  const navigation = baseNavigation.map(item => {
-    if (item.name === 'Leads' && newLeadsCount > 0) {
-      return { ...item, badge: newLeadsCount.toString() };
+  // Auto-prefetch para otimização
+  useAutoPrefetch(location);
+
+  // Ativar tempo real apenas em páginas específicas
+  useEffect(() => {
+    const realTimePages = ['/admin/leads', '/admin/leads/dashboard', '/admin/leads-intelligence'];
+    const currentPath = location;
+
+    if (realTimePages.some(page => currentPath.startsWith(page))) {
+      enableRealTime();
     }
-    return item;
-  });
+  }, [location, enableRealTime]);
+
+  // Create navigation with dynamic badge (memoized for performance)
+  const navigation = useMemo(() =>
+    baseNavigation.map(item => ({
+      ...item,
+      badge: item.name === 'Leads' && newLeadsCount > 0
+        ? newLeadsCount.toString()
+        : item.badge
+    })),
+    [newLeadsCount]
+  );
 
   useEffect(() => {
     const init = async () => {
@@ -166,14 +245,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p>Verificando autenticação...</p>
-        </div>
-      </div>
-    );
+    return <AuthLoading />;
   }
 
   return (
@@ -234,58 +306,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           {/* Navigation */}
           <nav className="select-none text-sm pt-6 pr-2 pl-2 flex-1 overflow-y-auto scroll-hide">
             <ul className="space-y-2">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                const isCurrent = !item.external && isCurrentPath(item.href);
-
-                if (item.external) {
-                  return (
-                    <li key={item.name}>
-                      <a
-                        href={item.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 px-4 py-3 mx-2 rounded-xl transition-colors text-zinc-700 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-                      >
-                        <Icon className="h-4 w-4" />
-                        <span>{item.name}</span>
-                      </a>
-                    </li>
-                  );
-                }
-
-                return (
-                  <li key={item.name}>
-                    <Link href={item.href}>
-                      {(
-                        <div
-                          className={`
-                            flex items-center gap-3 px-4 py-3 mx-2 text-sm font-medium rounded-xl transition-colors cursor-pointer
-                            ${isCurrent
-                              ? 'bg-gradient-to-r from-zinc-200 to-zinc-300 text-zinc-900 dark:from-zinc-700 dark:to-zinc-800 dark:text-zinc-100 beautiful-shadow'
-                              : 'text-zinc-700 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
-                            }
-                          `}
-                          onClick={() => setSidebarOpen(false)}
-                          role="link"
-                          aria-current={isCurrent ? 'page' : undefined}
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span>{item.name}</span>
-                          {item.badge && (
-                            <Badge
-                              variant={item.name === 'Leads' ? 'default' : 'secondary'}
-                              className={`ml-auto text-xs ${item.name === 'Leads' && newLeadsCount > 0 ? 'animate-pulse bg-red-500 text-white' : ''}`}
-                            >
-                              {item.badge}
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-                    </Link>
-                  </li>
-                );
-              })}
+              {navigation.map((item) => (
+                <NavigationItem
+                  key={item.name}
+                  item={item}
+                  isCurrentPath={isCurrentPath}
+                  onClick={() => setSidebarOpen(false)}
+                  onHover={handleMouseEnter}
+                  newLeadsCount={newLeadsCount}
+                />
+              ))}
             </ul>
           </nav>
 
@@ -332,6 +362,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <Badge variant="outline" className="hidden sm:inline-flex">
                 Ambiente: Desenvolvimento
               </Badge>
+
+              {shouldConnect && (
+                <Badge variant="secondary" className="hidden sm:inline-flex text-xs">
+                  🔴 Tempo Real
+                </Badge>
+              )}
 
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-medium">{user.name}</p>

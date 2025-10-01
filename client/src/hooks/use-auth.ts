@@ -37,23 +37,58 @@ export function useAuth() {
     isLoading: true,
   });
 
-  // Inicializar estado de autenticação (usando cookies seguros)
+  // Cache TTL: 5 minutos
+  const CACHE_TTL = 5 * 60 * 1000;
+
+  // Utilitário para cache com TTL
+  const getCachedAuth = useCallback(() => {
+    try {
+      const cached = sessionStorage.getItem('auth-cache');
+      if (!cached) return null;
+
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp > CACHE_TTL) {
+        sessionStorage.removeItem('auth-cache');
+        return null;
+      }
+
+      return data;
+    } catch {
+      sessionStorage.removeItem('auth-cache');
+      return null;
+    }
+  }, []);
+
+  const setCachedAuth = useCallback((authData: any) => {
+    try {
+      sessionStorage.setItem('auth-cache', JSON.stringify({
+        data: authData,
+        timestamp: Date.now()
+      }));
+    } catch (error) {
+      console.warn('Falha ao salvar cache:', error);
+    }
+  }, []);
+
+  // Inicializar estado de autenticação (usando cache otimizado)
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // Verificar se há dados em cache primeiro (para resposta mais rápida)
-        const cachedUser = sessionStorage.getItem('user-info');
-        if (cachedUser) {
-          const userData = JSON.parse(cachedUser);
-          // Estado temporário enquanto valida com servidor
-          setAuthState(prev => ({
-            ...prev,
-            user: { ...userData, id: 0 },
-            isLoading: true
-          }));
+        // Verificar cache válido primeiro (resposta instantânea)
+        const cachedAuth = getCachedAuth();
+        if (cachedAuth) {
+          setAuthState({
+            isAuthenticated: true,
+            user: cachedAuth.user,
+            roles: cachedAuth.roles || [],
+            currentRole: cachedAuth.currentRole,
+            token: 'cookie-based',
+            isLoading: false
+          });
+          return; // Para aqui se cache é válido
         }
 
-        // Validar sessão com servidor
+        // Cache expirado ou inexistente - validar com servidor
         const response = await fetch('/api/auth/me', {
           credentials: 'include',
           headers: {
@@ -63,6 +98,7 @@ export function useAuth() {
 
         if (!response.ok) {
           // Não autenticado - limpar cache e estado
+          sessionStorage.removeItem('auth-cache');
           sessionStorage.removeItem('user-info');
           setAuthState({
             isAuthenticated: false,
@@ -88,16 +124,25 @@ export function useAuth() {
         // Encontrar role atual com validação
         const currentRole = roles.find((r: AuthRole) => r.roleName === authData.currentRole) || roles[0];
 
-        setAuthState({
+        const finalAuthState = {
           isAuthenticated: true,
           user: authData.user,
           roles: roles,
           currentRole: currentRole,
           token: 'cookie-based',
           isLoading: false,
+        };
+
+        setAuthState(finalAuthState);
+
+        // Salvar no cache otimizado
+        setCachedAuth({
+          user: authData.user,
+          roles: roles,
+          currentRole: currentRole
         });
 
-        // Atualizar cache
+        // Manter compatibilidade com cache legado
         sessionStorage.setItem('user-info', JSON.stringify({
           name: authData.user.name,
           email: authData.user.email,
@@ -106,6 +151,7 @@ export function useAuth() {
 
       } catch (error) {
         console.error('Erro ao inicializar autenticação:', error);
+        sessionStorage.removeItem('auth-cache');
         sessionStorage.removeItem('user-info');
         setAuthState({
           isAuthenticated: false,
@@ -119,7 +165,7 @@ export function useAuth() {
     };
 
     initAuth();
-  }, []);
+  }, [getCachedAuth, setCachedAuth]);
 
   // Forçar revalidação da sessão (após login/switch-role)
   const revalidate = useCallback(async () => {
@@ -130,6 +176,9 @@ export function useAuth() {
       });
 
       if (!response.ok) {
+        // Limpar cache em caso de erro
+        sessionStorage.removeItem('auth-cache');
+        sessionStorage.removeItem('user-info');
         return false;
       }
 
@@ -137,15 +186,25 @@ export function useAuth() {
       const roles = Array.isArray(authData.roles) ? authData.roles : [];
       const currentRole = roles.find((r: AuthRole) => r.roleName === authData.currentRole) || roles[0];
 
-      setAuthState({
+      const newAuthState = {
         isAuthenticated: true,
         user: authData.user,
         roles,
         currentRole,
         token: 'cookie-based',
         isLoading: false,
+      };
+
+      setAuthState(newAuthState);
+
+      // Atualizar cache otimizado
+      setCachedAuth({
+        user: authData.user,
+        roles: roles,
+        currentRole: currentRole
       });
 
+      // Manter compatibilidade
       sessionStorage.setItem('user-info', JSON.stringify({
         name: authData.user.name,
         email: authData.user.email,
@@ -154,9 +213,10 @@ export function useAuth() {
 
       return true;
     } catch (error) {
+      sessionStorage.removeItem('auth-cache');
       return false;
     }
-  }, []);
+  }, [setCachedAuth]);
 
   // Função para fazer login (agora baseado em cookies)
   const login = useCallback((user: AuthUser, roles: AuthRole[]) => {
@@ -182,7 +242,8 @@ export function useAuth() {
       console.error('Erro no logout:', error);
     }
 
-    // Limpar todo o estado e cache
+    // Limpar todo o estado e cache (incluindo novo cache otimizado)
+    sessionStorage.removeItem('auth-cache');
     sessionStorage.removeItem('user-info');
     localStorage.removeItem('workshop-admin');
     localStorage.removeItem('workshop-workshops');

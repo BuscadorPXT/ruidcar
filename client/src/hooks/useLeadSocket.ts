@@ -24,22 +24,35 @@ let socket: Socket | null = null;
 export function useLeadSocket() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [leadStats, setLeadStats] = useState<LeadStats | null>(null);
   const [newLeadsCount, setNewLeadsCount] = useState(0);
+  const [shouldConnect, setShouldConnect] = useState(false);
 
+  // Só conecta quando realmente necessário (lazy connection)
   const connect = useCallback(() => {
-    if (!user?.id || socket?.connected) return;
+    if (!user?.id || !shouldConnect || socket?.connected) return;
+
+    // Só admins precisam de socket em tempo real
+    if (!hasRole('ADMIN')) {
+      console.log('🔌 Socket não necessário para role não-admin');
+      return;
+    }
 
     const socketUrl = process.env.NODE_ENV === 'production'
       ? 'https://ruidcar.com.br'
       : 'http://localhost:3000';
 
+    console.log('🔌 Conectando socket com configuração otimizada...');
     socket = io(socketUrl, {
       path: '/socket.io/',
       withCredentials: true,
-      transports: ['websocket', 'polling'],
+      transports: ['websocket'], // Apenas WebSocket para melhor performance
+      upgrade: false, // Não fazer upgrade de polling para websocket
+      rememberUpgrade: false,
+      timeout: 10000, // Timeout de conexão reduzido
+      forceNew: true // Força nova conexão para evitar problemas de cache
     });
 
     socket.on('connect', () => {
@@ -140,16 +153,23 @@ export function useLeadSocket() {
     }
   }, [user]);
 
-  // Auto-connect when component mounts and user is available
+  // Função para iniciar conexão lazy (chamada quando necessário)
+  const enableRealTime = useCallback(() => {
+    setShouldConnect(true);
+  }, []);
+
+  // Auto-connect apenas quando shouldConnect é true
   useEffect(() => {
-    if (user?.id && user.role === 'ADMIN') {
+    if (shouldConnect && user?.id && hasRole('ADMIN')) {
       connect();
     }
 
     return () => {
-      disconnect();
+      if (shouldConnect) {
+        disconnect();
+      }
     };
-  }, [user, connect, disconnect]);
+  }, [user, hasRole, shouldConnect, connect, disconnect]);
 
   // Helper function to play notification sound
   const playNotificationSound = () => {
@@ -189,5 +209,7 @@ export function useLeadSocket() {
     connect,
     disconnect,
     emit,
+    enableRealTime, // Função para ativar conexão lazy quando necessário
+    shouldConnect, // Estado da conexão
   };
 }

@@ -28,12 +28,19 @@ export function useNotifications() {
     loading: false
   });
 
-  // Polling interval (30 segundos para admin, 60 para outros)
+  // Polling interval otimizado (menos frequente para reduzir carga)
   const getPollingInterval = useCallback(() => {
-    if (hasRole('ADMIN')) return 30000; // 30s
-    if (hasRole('OFICINA_OWNER')) return 60000; // 60s
-    return 120000; // 2min para clientes
+    if (hasRole('ADMIN')) return 60000; // 60s (era 30s)
+    if (hasRole('OFICINA_OWNER')) return 120000; // 120s (era 60s)
+    return 300000; // 5min para clientes (era 2min)
   }, [hasRole]);
+
+  // Exponential backoff para erros
+  const [errorCount, setErrorCount] = useState(0);
+  const getBackoffInterval = useCallback(() => {
+    if (errorCount === 0) return getPollingInterval();
+    return Math.min(getPollingInterval() * Math.pow(2, errorCount), 300000); // Max 5min
+  }, [errorCount, getPollingInterval]);
 
   // Buscar notificações
   const fetchNotifications = useCallback(async () => {
@@ -83,9 +90,15 @@ export function useNotifications() {
         loading: false
       });
 
+      // Reset error count em caso de sucesso
+      setErrorCount(0);
+
     } catch (error) {
       console.error('Erro ao buscar notificações:', error);
       setState(prev => ({ ...prev, loading: false }));
+
+      // Incrementar contador de erros para backoff
+      setErrorCount(prev => prev + 1);
     }
   }, [isAuthenticated, hasRole, toast, state.notifications]);
 
@@ -153,19 +166,19 @@ export function useNotifications() {
     }
   }, []);
 
-  // Setup polling
+  // Setup polling com backoff
   useEffect(() => {
     if (!isAuthenticated) return;
 
     // Busca inicial
     fetchNotifications();
 
-    // Setup polling
-    const interval = setInterval(fetchNotifications, getPollingInterval());
+    // Setup polling com backoff interval
+    const interval = setInterval(fetchNotifications, getBackoffInterval());
 
     // Cleanup
     return () => clearInterval(interval);
-  }, [isAuthenticated, getPollingInterval]);
+  }, [isAuthenticated, getBackoffInterval, fetchNotifications]);
 
   // Criar notificações mock para desenvolvimento
   useEffect(() => {
