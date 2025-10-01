@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="#3b82f6" stroke="#1e40af" stroke-width="8"/>
+
+  <!-- Car silhouette -->
+  <g transform="translate(100, 180)">
+    <!-- Car body -->
+    <path d="M50 80 L280 80 Q300 80 310 100 L320 120 L320 140 L300 160 L20 160 L20 140 L30 120 Q40 80 50 80 Z"
+          fill="#ffffff" stroke="#e5e7eb" stroke-width="2"/>
+
+    <!-- Car windows -->
+    <path d="M70 80 L250 80 Q270 80 280 100 L285 120 L75 120 Q65 100 70 80 Z"
+          fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+
+    <!-- Wheels -->
+    <circle cx="80" cy="150" r="20" fill="#374151" stroke="#111827" stroke-width="3"/>
+    <circle cx="80" cy="150" r="12" fill="#6b7280"/>
+    <circle cx="260" cy="150" r="20" fill="#374151" stroke="#111827" stroke-width="3"/>
+    <circle cx="260" cy="150" r="12" fill="#6b7280"/>
+
+    <!-- RuidCar logo text -->
+    <text x="170" y="110" text-anchor="middle" font-family="Arial, sans-serif"
+          font-size="14" font-weight="bold" fill="#1e40af">RuidCar</text>
+  </g>
+
+  <!-- Sound waves indicating noise reduction -->
+  <g transform="translate(256, 256)" opacity="0.8">
+    <!-- Sound wave 1 -->
+    <path d="M -80 -30 Q -60 -40 -40 -30 Q -20 -20 0 -30 Q 20 -40 40 -30 Q 60 -20 80 -30"
+          fill="none" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/>
+    <!-- Sound wave 2 -->
+    <path d="M -80 0 Q -60 -10 -40 0 Q -20 10 0 0 Q 20 -10 40 0 Q 60 10 80 0"
+          fill="none" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+    <!-- Sound wave 3 -->
+    <path d="M -80 30 Q -60 20 -40 30 Q -20 40 0 30 Q 20 20 40 30 Q 60 40 80 30"
+          fill="none" stroke="#d97706" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <!-- Location pin for map functionality -->
+  <g transform="translate(380, 120)">
+    <path d="M 0 0 Q -15 -15 -15 -30 Q -15 -45 0 -45 Q 15 -45 15 -30 Q 15 -15 0 0 Z"
+          fill="#ef4444" stroke="#dc2626" stroke-width="2"/>
+    <circle cx="0" cy="-30" r="8" fill="#ffffff"/>
+  </g>
+</svg>

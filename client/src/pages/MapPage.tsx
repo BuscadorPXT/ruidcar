@@ -17,6 +17,7 @@ import WorkshopSearch from '@/components/WorkshopSearch';
 import WorkshopModal from '@/components/WorkshopModal';
 import WorkshopModalMobile from '@/components/WorkshopModalMobile';
 import HighContrastToggle from '@/components/HighContrastToggle';
+import NearestWorkshopHero from '@/components/NearestWorkshopHero';
 import { useMobile } from '@/hooks/use-mobile';
 import { type Workshop } from '@shared/schema';
 import { BRAZILIAN_STATES, STATE_NAMES } from '@shared/constants';
@@ -402,6 +403,33 @@ export default function MapPage() {
     );
   };
 
+  const handleHeroViewOnMap = (workshop: Workshop) => {
+    // Switch to map view and center on workshop
+    updateUrlState({ view: 'map' });
+    setMapCenter([parseFloat(workshop.latitude), parseFloat(workshop.longitude)]);
+    setSelectedWorkshop(workshop);
+
+    // Scroll to map area
+    setTimeout(() => {
+      const mapElement = document.querySelector('[role="tabpanel"][aria-label="Visualização em mapa"]');
+      if (mapElement) {
+        mapElement.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+
+    // Track hero interaction
+    analytics.trackWorkshopView(
+      workshop.id.toString(),
+      'nearest_hero',
+      {
+        name: workshop.name,
+        state: workshop.state,
+        city: workshop.city,
+        source: 'nearest_workshop_hero'
+      }
+    );
+  };
+
   const handleClearSearch = () => {
     updateUrlState({ search: '', state: 'all' });
     setFilteredWorkshops(workshops);
@@ -474,6 +502,15 @@ export default function MapPage() {
       </header>
 
       <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+        {/* Nearest Workshop Hero - Show on mobile when no active search */}
+        {isMobile && !searchQuery && !isLoading && (
+          <div className="mb-6">
+            <NearestWorkshopHero
+              onViewOnMap={handleHeroViewOnMap}
+              className="mb-4"
+            />
+          </div>
+        )}
         <div className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <div className="md:col-span-2">

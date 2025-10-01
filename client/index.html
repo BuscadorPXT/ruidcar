@@ -35,6 +35,24 @@
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/assets/logo.png" />
     <link rel="apple-touch-icon" href="/assets/logo.png" />
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#3b82f6" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="RuidCar Map" />
+
+    <!-- PWA Icons for iOS -->
+    <link rel="apple-touch-icon" sizes="72x72" href="/icons/icon-72x72.png" />
+    <link rel="apple-touch-icon" sizes="96x96" href="/icons/icon-96x96.png" />
+    <link rel="apple-touch-icon" sizes="128x128" href="/icons/icon-128x128.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="384x384" href="/icons/icon-384x384.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512x512.png" />
     
     <!-- Estruturação de dados para SEO (Schema.org) -->
     <script type="application/ld+json">
@@ -107,6 +125,82 @@
     
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+      // Service Worker Registration for PWA
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+              console.log('✅ Service Worker registered successfully:', registration.scope);
+
+              // Check for updates
+              registration.addEventListener('updatefound', function() {
+                const newWorker = registration.installing;
+                console.log('🔄 New Service Worker installing...');
+
+                newWorker.addEventListener('statechange', function() {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('🆕 New content available! Please refresh.');
+
+                    // Show update notification to user
+                    if (window.confirm('Nova versão disponível! Deseja atualizar agora?')) {
+                      window.location.reload();
+                    }
+                  }
+                });
+              });
+            })
+            .catch(function(error) {
+              console.warn('❌ Service Worker registration failed:', error);
+            });
+        });
+
+        // Listen for messages from SW
+        navigator.serviceWorker.addEventListener('message', function(event) {
+          console.log('📨 Message from SW:', event.data);
+
+          if (event.data.type === 'CACHE_UPDATED') {
+            console.log('💾 Cache updated for:', event.data.url);
+          }
+        });
+      } else {
+        console.warn('⚠️ Service Workers not supported in this browser');
+      }
+    </script>
+
+    <!-- Install PWA Prompt -->
+    <script>
+      let deferredPrompt;
+
+      window.addEventListener('beforeinstallprompt', function(e) {
+        console.log('📱 PWA install prompt available');
+        e.preventDefault();
+        deferredPrompt = e;
+
+        // Show custom install button/banner if needed
+        // This can be handled in React components as well
+        const installEvent = new CustomEvent('pwa-install-available', {
+          detail: { prompt: deferredPrompt }
+        });
+        window.dispatchEvent(installEvent);
+      });
+
+      window.addEventListener('appinstalled', function(e) {
+        console.log('🎉 PWA installed successfully');
+        deferredPrompt = null;
+
+        // Track PWA install
+        if (typeof gtag !== 'undefined') {
+          gtag('event', 'pwa_install', {
+            event_category: 'engagement',
+            event_label: 'ruidcar_map'
+          });
+        }
+      });
+    </script>
+
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
   </body>

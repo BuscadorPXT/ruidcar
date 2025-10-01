@@ -1,23 +1,46 @@
 import { useEffect, useState } from "react";
-import { X, MapPin, Phone, Clock, ExternalLink } from "lucide-react";
+import { X, MapPin, Phone, Clock, ExternalLink, ArrowLeft, ArrowRight, Navigation } from "lucide-react";
+import { useDrag } from "@use-gesture/react";
+import { useSpring, animated } from "@react-spring/web";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { type Workshop } from "@shared/schema";
+import { useAnalytics } from "@/hooks/use-analytics";
 
 interface WorkshopModalMobileProps {
   workshop: Workshop | null;
   open: boolean;
   onClose: () => void;
+  source?: 'search' | 'nearest_hero' | 'map' | 'proximity_notification';
 }
 
-export default function WorkshopModalMobile({ workshop, open, onClose }: WorkshopModalMobileProps) {
+export default function WorkshopModalMobile({ workshop, open, onClose, source = 'map' }: WorkshopModalMobileProps) {
   const [isAnimating, setIsAnimating] = useState(false);
+  const [swipeAction, setSwipeAction] = useState<'call' | 'navigate' | null>(null);
+  const { trackConversion } = useAnalytics();
+
+  // Spring animation for swipe feedback
+  const [{ x, scale, backgroundColor }, api] = useSpring(() => ({
+    x: 0,
+    scale: 1,
+    backgroundColor: 'rgba(255, 255, 255, 1)',
+    config: { tension: 300, friction: 30 }
+  }));
 
   useEffect(() => {
     if (open) {
       setIsAnimating(true);
       // Prevent body scroll when modal is open
       document.body.style.overflow = 'hidden';
+
+      // Track modal view
+      if (workshop) {
+        trackConversion('view_map', workshop.id.toString(), source, {
+          workshopName: workshop.name,
+          workshopCity: workshop.city,
+          interaction: 'modal_open'
+        });
+      }
     } else {
       // Restore body scroll
       document.body.style.overflow = '';
@@ -26,7 +49,7 @@ export default function WorkshopModalMobile({ workshop, open, onClose }: Worksho
     return () => {
       document.body.style.overflow = '';
     };
-  }, [open]);
+  }, [open, workshop, trackConversion, source]);
 
   const handleClose = () => {
     setIsAnimating(false);
@@ -45,6 +68,89 @@ export default function WorkshopModalMobile({ workshop, open, onClose }: Worksho
       )}`
     : null;
 
+  // Handler functions for actions
+  const handleCallWorkshop = (phone: string) => {
+    if (workshop) {
+      trackConversion('call', workshop.id.toString(), source, {
+        workshopName: workshop.name,
+        phone: phone,
+        interaction: 'direct_call'
+      });
+    }
+    window.open(`tel:${phone.replace(/\D/g, '')}`, '_self');
+  };
+
+  const handleNavigateToWorkshop = (workshop: Workshop) => {
+    trackConversion('navigate', workshop.id.toString(), source, {
+      workshopName: workshop.name,
+      destination: 'google_maps',
+      interaction: 'navigate_button'
+    });
+    window.open(googleMapsUrl, '_blank');
+  };
+
+  // Swipe gesture configuration
+  const bind = useDrag(
+    ({ active, movement: [mx], direction: [xDir], velocity: [vx] }) => {
+      if (!workshop) return;
+
+      const trigger = Math.abs(mx) > 50; // Minimum distance to trigger action
+      const isQuickSwipe = Math.abs(vx) > 0.5; // Quick swipe detection
+
+      if (active) {
+        // During drag - provide visual feedback
+        const clampedMx = Math.max(-150, Math.min(150, mx));
+        const intensity = Math.abs(clampedMx) / 150;
+
+        // Determine action based on direction
+        if (mx > 30) {
+          setSwipeAction('call');
+          api.start({
+            x: clampedMx,
+            backgroundColor: `rgba(34, 197, 94, ${0.1 + intensity * 0.2})`, // Green for call
+            scale: 1 + intensity * 0.05
+          });
+        } else if (mx < -30) {
+          setSwipeAction('navigate');
+          api.start({
+            x: clampedMx,
+            backgroundColor: `rgba(59, 130, 246, ${0.1 + intensity * 0.2})`, // Blue for navigate
+            scale: 1 + intensity * 0.05
+          });
+        } else {
+          setSwipeAction(null);
+          api.start({
+            x: clampedMx,
+            backgroundColor: 'rgba(255, 255, 255, 1)',
+            scale: 1
+          });
+        }
+      } else {
+        // End of drag - execute action if threshold is met
+        if ((trigger || isQuickSwipe) && swipeAction) {
+          if (swipeAction === 'call' && workshop.phone) {
+            handleCallWorkshop(workshop.phone);
+          } else if (swipeAction === 'navigate') {
+            handleNavigateToWorkshop(workshop);
+          }
+        }
+
+        // Reset animation
+        setSwipeAction(null);
+        api.start({
+          x: 0,
+          backgroundColor: 'rgba(255, 255, 255, 1)',
+          scale: 1
+        });
+      }
+    },
+    {
+      axis: 'x',
+      filterTaps: true,
+      rubberband: true
+    }
+  );
+
   return (
     <>
       {/* Backdrop */}
@@ -59,9 +165,15 @@ export default function WorkshopModalMobile({ workshop, open, onClose }: Worksho
         aria-label="Fechar modal"
       />
 
-      {/* Bottom Sheet Modal */}
-      <div
-        className={`fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-50 max-h-[85vh] overflow-hidden transition-transform duration-300 ease-out ${
+      {/* Bottom Sheet Modal with Swipe Gestures */}
+      <animated.div
+        {...bind()}
+        style={{
+          transform: x.to(x => `translateX(${x}px)`),
+          scale,
+          backgroundColor
+        }}
+        className={`fixed bottom-0 left-0 right-0 rounded-t-3xl shadow-2xl z-50 max-h-[85vh] overflow-hidden transition-transform duration-300 ease-out touch-none ${
           open && isAnimating ? 'translate-y-0' : 'translate-y-full'
         }`}
         role="dialog"
@@ -131,6 +243,13 @@ export default function WorkshopModalMobile({ workshop, open, onClose }: Worksho
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={`Enviar mensagem via WhatsApp para ${workshop.name}`}
+                        onClick={() => {
+                          trackConversion('whatsapp', workshop.id.toString(), source, {
+                            workshopName: workshop.name,
+                            phone: workshop.phone,
+                            interaction: 'whatsapp_button'
+                          });
+                        }}
                       >
                         💬 Falar no WhatsApp
                         <ExternalLink className="h-4 w-4 ml-2" aria-hidden="true" />
@@ -141,28 +260,6 @@ export default function WorkshopModalMobile({ workshop, open, onClose }: Worksho
               </div>
             )}
 
-            {/* Business Hours (if available) */}
-            {workshop.business_hours && (
-              <div className="space-y-3">
-                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-primary" aria-hidden="true" />
-                  Horário de Funcionamento
-                </h3>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-gray-700">{workshop.business_hours}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Description (if available) */}
-            {workshop.description && (
-              <div className="space-y-3">
-                <h3 className="font-semibold text-gray-900">Sobre a Oficina</h3>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-gray-700">{workshop.description}</p>
-                </div>
-              </div>
-            )}
 
             {/* RuidCar Info */}
             <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
@@ -187,6 +284,13 @@ export default function WorkshopModalMobile({ workshop, open, onClose }: Worksho
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Ver localização de ${workshop.name} no Google Maps`}
+              onClick={() => {
+                trackConversion('navigate', workshop.id.toString(), source, {
+                  workshopName: workshop.name,
+                  destination: 'google_maps',
+                  interaction: 'main_button'
+                });
+              }}
             >
               🗺️ Ver no Google Maps
               <ExternalLink className="h-5 w-5 ml-2" aria-hidden="true" />
@@ -202,7 +306,41 @@ export default function WorkshopModalMobile({ workshop, open, onClose }: Worksho
             Fechar
           </Button>
         </div>
-      </div>
+
+        {/* Swipe Instructions - Show when no active swipe */}
+        {!swipeAction && (
+          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10">
+            <div className="flex items-center gap-1 text-xs text-gray-400 bg-white/80 rounded-full px-3 py-1">
+              <ArrowRight className="h-3 w-3 text-green-500" />
+              <span>Arrastar para ligar</span>
+              <span className="mx-1">•</span>
+              <ArrowLeft className="h-3 w-3 text-blue-500" />
+              <span>Arrastar para navegar</span>
+            </div>
+          </div>
+        )}
+
+        {/* Swipe Action Feedback */}
+        {swipeAction && (
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+            <div className={`flex items-center gap-2 text-white font-semibold px-4 py-2 rounded-full ${
+              swipeAction === 'call' ? 'bg-green-500' : 'bg-blue-500'
+            }`}>
+              {swipeAction === 'call' ? (
+                <>
+                  <Phone className="h-5 w-5" />
+                  <span>Ligar</span>
+                </>
+              ) : (
+                <>
+                  <Navigation className="h-5 w-5" />
+                  <span>Navegar</span>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </animated.div>
     </>
   );
 }

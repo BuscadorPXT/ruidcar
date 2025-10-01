@@ -61,3 +61,10 @@ logs/
 .replit
 .replit.domain.config
 ecosystem.config.cjs
+
+# Arquivos temporários
+.DS_Store
+cookie.txt
+cookies.txt
+*.tmp
+*.log
