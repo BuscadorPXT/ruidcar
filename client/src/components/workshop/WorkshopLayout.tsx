@@ -254,69 +254,41 @@ export default function WorkshopLayout({ children }: WorkshopLayoutProps) {
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-30 sidebar beautiful-shadow overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 transform transition-transform duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-30 w-80 sidebar beautiful-shadow overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 transform transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
       `}>
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-screen max-h-screen">
           {/* Header */}
-          <div className="flex items-center justify-between p-5 border-b border-zinc-200 dark:border-zinc-800">
-            <div className="flex items-center gap-2">
-              <Wrench className="h-6 w-6 text-primary" />
-              <span className="font-bold text-lg">RuidCar Oficina</span>
+          <div className="flex items-center justify-between p-5 border-b border-zinc-200 dark:border-zinc-800 bg-gradient-to-r from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-950 backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-primary/10 border border-primary/20">
+                <Wrench className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <span className="font-bold text-lg text-foreground">RuidCar</span>
+                <div className="text-xs text-muted-foreground font-medium">Workshop Panel</div>
+              </div>
             </div>
             <Button
               variant="ghost"
               size="sm"
-              className="lg:hidden"
+              className="lg:hidden hover:bg-zinc-200 dark:hover:bg-zinc-800"
               onClick={() => setSidebarOpen(false)}
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
 
-          {/* Admin info */}
-          <div className="p-5 border-b border-zinc-200 dark:border-zinc-800">
-            <div className="flex items-center gap-3">
-              <Avatar>
-                <AvatarFallback>
-                  {admin.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
-                  {admin.name}
-                </p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {admin.email}
-                </p>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="secondary" className="text-xs">
-                    Administrador
-                  </Badge>
-                  {admin.isActive ? (
-                    <Badge variant="default" className="text-xs bg-green-500">
-                      Ativo
-                    </Badge>
-                  ) : (
-                    <Badge variant="destructive" className="text-xs">
-                      Inativo
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Workshop info */}
           {selectedWorkshop && (
-            <div className="p-4 border-b">
-              <Card>
+            <div className="p-4 border-b border-zinc-200 dark:border-zinc-800">
+              <Card className="bg-gradient-to-r from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900 border-0">
                 <CardContent className="p-3">
                   <div className="flex items-start gap-3">
                     <Building2 className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-sm mb-1 text-foreground">{selectedWorkshop.name}</h3>
+                      <h3 className="font-semibold text-sm mb-1 text-foreground">{selectedWorkshop.name}</h3>
                       <div className="space-y-1 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
@@ -352,8 +324,12 @@ export default function WorkshopLayout({ children }: WorkshopLayoutProps) {
           )}
 
           {/* Navigation */}
-          <nav className="select-none text-sm pt-6 pr-2 pl-2 flex-1 overflow-y-auto scroll-hide">
-            <ul className="space-y-2">
+          <nav className="select-none text-sm pt-4 pr-2 pl-2 flex-1 overflow-y-auto scroll-smooth scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent">
+            <div className="pb-4">
+              <div className="px-3 mb-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Menu da Oficina</p>
+              </div>
+              <ul className="space-y-1">
               {navigation.map((item) => {
                 const Icon = item.icon;
                 const isCurrent = !item.external && isCurrentPath(item.href);
@@ -404,25 +380,58 @@ export default function WorkshopLayout({ children }: WorkshopLayoutProps) {
                   </li>
                 );
               })}
-            </ul>
+              </ul>
+            </div>
           </nav>
 
-          {/* Logout */}
-          <div className="p-4 border-t">
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-4 w-4 mr-3" />
-              Sair
-            </Button>
+          {/* Admin info + Logout no final */}
+          <div className="border-t border-zinc-200 dark:border-zinc-800 bg-gradient-to-t from-zinc-100 via-zinc-50 to-transparent dark:from-zinc-900 dark:via-zinc-950 backdrop-blur-sm">
+            {/* Admin info */}
+            <div className="p-4">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-700/50 backdrop-blur-sm">
+                <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+                  <AvatarFallback className="text-sm font-semibold bg-gradient-to-br from-primary/20 to-primary/10 text-primary">
+                    {admin.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">
+                    {admin.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {admin.email}
+                  </p>
+                  <div className="flex items-center gap-1 mt-1 flex-wrap">
+                    <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
+                      Administrador
+                    </Badge>
+                    {admin.isActive && (
+                      <Badge variant="default" className="text-xs bg-green-500/90 hover:bg-green-500">
+                        Ativo
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Logout */}
+            <div className="px-4 pb-4">
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-all duration-200 border border-transparent hover:border-red-200 dark:hover:border-red-900/50"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4 mr-3" />
+                Sair
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-[320px]">
+      <div className="lg:pl-80">
         {/* Top bar */}
         <div className="bg-card border-b">
           <div className="flex items-center justify-between px-4 py-3">
