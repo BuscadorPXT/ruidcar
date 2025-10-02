@@ -59,7 +59,7 @@ const WorkshopItem = memo(({
         </div>
 
         <div className="ml-4 text-right">
-          {workshop.isActive ? (
+          {workshop.active ? (
             <span className="inline-block px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full">
               Ativa
             </span>

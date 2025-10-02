@@ -59,7 +59,8 @@
       "Bash(git push:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(pm2 logs:*)"
+      "Bash(pm2 logs:*)",
+      "Bash(pm2 status:*)"
     ],
     "deny": [],
     "ask": []

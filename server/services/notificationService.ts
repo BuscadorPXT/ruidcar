@@ -6,7 +6,7 @@ import {
   diagnosticServiceConfig,
   workshopAdmins
 } from '../../shared/schema';
-import { eq, and, gte, lte, ne } from 'drizzle-orm';
+import { eq, and, gte, lte, ne, isNull } from 'drizzle-orm';
 import {
   sendAppointmentConfirmation,
   sendAppointmentReminder,
@@ -304,7 +304,7 @@ async function processAppointmentReminders() {
       .where(and(
         eq(appointments.preferredDate, tomorrow),
         eq(appointments.status, 'confirmed'),
-        eq(appointments.reminderSentAt, null)
+        isNull(appointments.reminderSentAt)
       ));
 
     console.log(`Found ${appointmentsToRemind.length} appointments to remind`);

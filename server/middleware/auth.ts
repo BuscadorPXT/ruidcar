@@ -167,52 +167,46 @@ export async function getUserWithRoles(userId: number): Promise<AuthenticatedUse
   }
 }
 
-// Middleware de autenticação principal
+// Middleware de autenticação principal - SIMPLIFICADO
 export async function authenticateUser(req: Request, res: Response, next: NextFunction) {
   try {
-    // Debug: ver todos os cookies recebidos
-    console.log('🍪 Cookies recebidos:', req.cookies);
-    console.log('🍪 Headers:', {
-      cookie: req.headers.cookie,
-      authorization: req.headers.authorization,
-      origin: req.headers.origin
-    });
+    console.log('🔐 Iniciando autenticação para:', req.path);
 
-    // Buscar token do header Authorization ou cookie
-    let token = req.headers.authorization?.replace('Bearer ', '');
+    // 1. Buscar token - ordem de prioridade simplificada
+    let token: string | undefined;
 
-    // Fallback para header x-auth-token (compatibilidade)
-    if (!token) {
-      token = req.headers['x-auth-token'] as string;
+    // Prioridade 1: Authorization header (padrão JWT)
+    if (req.headers.authorization?.startsWith('Bearer ')) {
+      token = req.headers.authorization.replace('Bearer ', '');
     }
 
-    // Fallback para cookie seguro (prioridade maior)
+    // Prioridade 2: Cookie auth-token (fallback principal)
     if (!token && req.cookies?.['auth-token']) {
       token = req.cookies['auth-token'];
     }
-    // Aceitar também o cookie do painel de oficina
+
+    // Prioridade 3: Cookie workshop-token (painel oficina)
     if (!token && req.cookies?.['workshop-token']) {
       token = req.cookies['workshop-token'];
     }
 
-    console.log('🔍 Token final:', token ? token.substring(0, 20) + '...' : 'null');
+    console.log('🔍 Token encontrado:', token ? 'SIM' : 'NÃO');
 
     if (!token) {
+      console.log('❌ Nenhum token encontrado');
       return res.status(401).json({
         message: "Token de autenticação necessário",
         code: "NO_AUTH_TOKEN"
       });
     }
 
-    // Verificar se é um token simples de admin (temporário)
-    console.log('🔍 Verificando se é token simples...', token.startsWith('admin-simple-token-'));
+    // 2. Verificar tokens especiais primeiro
     if (token.startsWith('admin-simple-token-')) {
-      console.log('✅ Token simples detectado, criando usuário mock');
-      // Para tokens simples de admin, criar um usuário mock
+      console.log('✅ Token admin simples detectado');
       const mockUser: AuthenticatedUser = {
         userId: 1,
         email: 'admin@ruidcar.com',
-        name: 'Admin',
+        name: 'Admin Sistema',
         phone: null,
         roles: [{
           roleId: 1,
@@ -224,56 +218,69 @@ export async function authenticateUser(req: Request, res: Response, next: NextFu
       };
 
       req.user = mockUser;
-      console.log('✅ Mock user criado:', mockUser.email, 'roles:', mockUser.roles.map(r => r.roleName));
+      console.log('✅ Usuário mock criado com sucesso');
       next();
       return;
     }
 
-    // Verificar e decodificar JWT normal
+    // 3. Verificar e decodificar JWT
     let decoded: JWTPayload;
     try {
       decoded = verifyJWT(token);
+      console.log('✅ Token JWT válido para usuário:', decoded.userId);
     } catch (jwtError) {
+      console.log('❌ Token JWT inválido:', (jwtError as Error).message);
       return res.status(401).json({
         message: "Token inválido ou expirado",
         code: "INVALID_TOKEN"
       });
     }
 
-    // Buscar dados atualizados do usuário (padrão)
+    // 4. Buscar dados do usuário - simplificado
     let user = await getUserWithRoles(decoded.userId);
 
-    // Fallback: aceitar tokens de administradores de oficina (sem entrada em users)
-    if (!user && Array.isArray((decoded as any).roles)) {
-      const rolesFromToken = (decoded as any).roles as UserRoleData[];
+    // 5. Fallback para workshop admins - simplificado
+    if (!user && decoded.roles && Array.isArray(decoded.roles)) {
+      console.log('🔄 Tentando fallback para workshop admin');
+      const rolesFromToken = decoded.roles as UserRoleData[];
       const isWorkshopToken = rolesFromToken.some(r => r.roleName === 'OFICINA_OWNER');
-      if (isWorkshopToken) {
-        const admin = await storage.getWorkshopAdminById(decoded.userId).catch(() => undefined);
-        if (admin) {
-          const organizationIds = rolesFromToken
-            .map(r => r.organizationId)
-            .filter((id): id is number => id !== null);
 
-          user = {
-            userId: decoded.userId,
-            email: admin.email,
-            name: admin.name,
-            phone: (admin as any).phone || null,
-            roles: rolesFromToken,
-            organizationIds: [...new Set(organizationIds)],
-          };
+      if (isWorkshopToken) {
+        try {
+          const { storage } = await import('../storage');
+          const admin = await storage.getWorkshopAdminById(decoded.userId);
+
+          if (admin) {
+            const organizationIds = rolesFromToken
+              .map(r => r.organizationId)
+              .filter((id): id is number => id !== null);
+
+            user = {
+              userId: decoded.userId,
+              email: admin.email,
+              name: admin.name,
+              phone: admin.phone || null,
+              roles: rolesFromToken,
+              organizationIds: [...new Set(organizationIds)],
+            };
+            console.log('✅ Workshop admin encontrado via fallback');
+          }
+        } catch (storageError) {
+          console.log('⚠️ Erro no fallback storage:', (storageError as Error).message);
         }
       }
     }
 
     if (!user) {
+      console.log('❌ Usuário não encontrado após todas as tentativas');
       return res.status(401).json({
         message: "Usuário não encontrado ou inativo",
         code: "INVALID_USER"
       });
     }
 
-    // Anexar usuário à requisição
+    // 6. Sucesso - anexar usuário à requisição
+    console.log('✅ Autenticação bem-sucedida para:', user.email);
     req.user = user;
     next();
 

@@ -124,7 +124,9 @@ export default function WorkshopMap({
 }: WorkshopMapProps) {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(propUserLocation || null);
   const [zoomLevel, setZoomLevel] = useState(5);
+  const [isMapReady, setIsMapReady] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Track if we have a user location for showing radius circle
   const hasUserLocation = userLocation || propUserLocation;
@@ -164,6 +166,23 @@ export default function WorkshopMap({
     }
   }, [propUserLocation]);
 
+  // Garantir que o container está pronto antes de renderizar o mapa
+  useEffect(() => {
+    const checkContainer = () => {
+      if (containerRef.current) {
+        setIsMapReady(true);
+      }
+    };
+
+    // Verificar imediatamente
+    checkContainer();
+
+    // Fallback: verificar após um pequeno delay
+    const timer = setTimeout(checkContainer, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     // Get user location only if not provided via props
     if (!propUserLocation && navigator.geolocation) {
@@ -188,18 +207,30 @@ export default function WorkshopMap({
       </div>
 
       <div
+        ref={containerRef}
         role="application"
         aria-label="Mapa interativo de oficinas credenciadas RuidCar"
         aria-describedby="map-description"
         tabIndex={0}
         className="h-full w-full"
       >
-        <MapContainer
-          center={center}
-          zoom={5}
-          className="h-full w-full"
-          ref={mapRef as any}
-        >
+        {!isMapReady ? (
+          <div className="h-full w-full flex items-center justify-center bg-gray-100">
+            <div className="text-center">
+              <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+              <p className="text-gray-600 text-sm">Carregando mapa...</p>
+            </div>
+          </div>
+        ) : (
+          <MapContainer
+            center={center}
+            zoom={5}
+            className="h-full w-full"
+            ref={mapRef as any}
+            whenReady={() => {
+              console.log('✅ Mapa Leaflet inicializado com sucesso');
+            }}
+          >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -255,6 +286,7 @@ export default function WorkshopMap({
           );
         })}
         </MapContainer>
+        )}
       </div>
 
       {/* Clustering info overlay removido conforme solicitação */}

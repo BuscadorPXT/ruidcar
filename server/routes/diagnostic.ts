@@ -12,6 +12,7 @@ import {
 } from "../../shared/schema";
 import { eq, and, or, gte, lte, between, sql } from "drizzle-orm";
 import { z } from "zod";
+import { authenticateUser } from "../middleware/auth";
 
 // ============================================
 // SCHEMAS DE VALIDAÇÃO
@@ -57,36 +58,87 @@ const SettingsSchema = z.object({
 // MIDDLEWARE DE AUTENTICAÇÃO
 // ============================================
 
+// Middleware integrado para autenticação de oficina
 async function requireWorkshopAuth(req: Request, res: Response, next: Function) {
-  // TODO: Implementar autenticação real
-  // Por enquanto, usar workshop_id do header ou query para testes
+  try {
+    // 1. Verificar se usuário está autenticado
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Usuário não autenticado",
+        code: "NOT_AUTHENTICATED"
+      });
+    }
 
-  const workshopId = req.headers['x-workshop-id'] || req.query.workshop_id;
+    // 2. Determinar workshop_id - múltiplas fontes
+    let workshopId: number | undefined;
 
-  if (!workshopId) {
-    return res.status(401).json({
+    // Prioridade 1: Header x-workshop-id (compatibilidade frontend)
+    if (req.headers['x-workshop-id']) {
+      workshopId = parseInt(req.headers['x-workshop-id'] as string);
+    }
+
+    // Prioridade 2: Query parameter (fallback)
+    if (!workshopId && req.query.workshop_id) {
+      workshopId = parseInt(req.query.workshop_id as string);
+    }
+
+    // Prioridade 3: Primeira organização do usuário (fallback automático)
+    if (!workshopId && req.user.organizationIds.length > 0) {
+      workshopId = req.user.organizationIds[0];
+      console.log('🔄 Usando workshop_id automático:', workshopId);
+    }
+
+    if (!workshopId || isNaN(workshopId)) {
+      return res.status(400).json({
+        success: false,
+        message: "ID da oficina é obrigatório",
+        code: "WORKSHOP_ID_REQUIRED"
+      });
+    }
+
+    // 3. Verificar se usuário tem acesso à oficina
+    const hasAccess = req.user.roles.some(role =>
+      role.roleName === 'ADMIN' ||
+      (role.roleName === 'OFICINA_OWNER' && role.organizationId === workshopId)
+    );
+
+    if (!hasAccess) {
+      return res.status(403).json({
+        success: false,
+        message: "Acesso negado a esta oficina",
+        code: "WORKSHOP_ACCESS_DENIED"
+      });
+    }
+
+    // 4. Buscar dados da oficina
+    const workshop = await db
+      .select()
+      .from(workshops)
+      .where(eq(workshops.id, workshopId))
+      .limit(1);
+
+    if (!workshop.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Oficina não encontrada",
+        code: "WORKSHOP_NOT_FOUND"
+      });
+    }
+
+    // 5. Adicionar workshop ao request
+    (req as any).workshop = workshop[0];
+    console.log('✅ Acesso autorizado à oficina:', workshop[0].name);
+    next();
+
+  } catch (error) {
+    console.error('❌ Erro na autenticação de oficina:', error);
+    return res.status(500).json({
       success: false,
-      message: "Autenticação necessária"
+      message: "Erro interno do servidor",
+      code: "AUTH_ERROR"
     });
   }
-
-  // Verificar se workshop existe
-  const workshop = await db
-    .select()
-    .from(workshops)
-    .where(eq(workshops.id, parseInt(workshopId as string)))
-    .limit(1);
-
-  if (!workshop.length) {
-    return res.status(403).json({
-      success: false,
-      message: "Oficina não encontrada"
-    });
-  }
-
-  // Adicionar workshop ao request
-  (req as any).workshop = workshop[0];
-  next();
 }
 
 // ============================================
@@ -157,7 +209,7 @@ export function createDiagnosticRoutes(app: Router) {
   // ============================================
 
   // GET /api/workshop/diagnostic/status
-  app.get("/api/workshop/diagnostic/status", requireWorkshopAuth, async (req: Request, res: Response) => {
+  app.get("/api/workshop/diagnostic/status", authenticateUser, requireWorkshopAuth, async (req: Request, res: Response) => {
     try {
       const workshop = (req as any).workshop;
 
@@ -206,7 +258,7 @@ export function createDiagnosticRoutes(app: Router) {
   });
 
   // POST /api/workshop/diagnostic/toggle
-  app.post("/api/workshop/diagnostic/toggle", requireWorkshopAuth, async (req: Request, res: Response) => {
+  app.post("/api/workshop/diagnostic/toggle", authenticateUser, requireWorkshopAuth, async (req: Request, res: Response) => {
     try {
       const workshop = (req as any).workshop;
       const { activate } = req.body;
@@ -288,7 +340,7 @@ export function createDiagnosticRoutes(app: Router) {
   });
 
   // PUT /api/workshop/diagnostic/settings
-  app.put("/api/workshop/diagnostic/settings", requireWorkshopAuth, async (req: Request, res: Response) => {
+  app.put("/api/workshop/diagnostic/settings", authenticateUser, requireWorkshopAuth, async (req: Request, res: Response) => {
     try {
       const workshop = (req as any).workshop;
       const settings = SettingsSchema.parse(req.body);
@@ -351,7 +403,7 @@ export function createDiagnosticRoutes(app: Router) {
   // ============================================
 
   // GET /api/workshop/diagnostic/pricing
-  app.get("/api/workshop/diagnostic/pricing", requireWorkshopAuth, async (req: Request, res: Response) => {
+  app.get("/api/workshop/diagnostic/pricing", authenticateUser, requireWorkshopAuth, async (req: Request, res: Response) => {
     try {
       const workshop = (req as any).workshop;
 
@@ -376,7 +428,7 @@ export function createDiagnosticRoutes(app: Router) {
   });
 
   // PUT /api/workshop/diagnostic/pricing
-  app.put("/api/workshop/diagnostic/pricing", requireWorkshopAuth, async (req: Request, res: Response) => {
+  app.put("/api/workshop/diagnostic/pricing", authenticateUser, requireWorkshopAuth, async (req: Request, res: Response) => {
     try {
       const workshop = (req as any).workshop;
       const pricingData = PricingUpdateSchema.parse(req.body);
@@ -442,7 +494,7 @@ export function createDiagnosticRoutes(app: Router) {
   });
 
   // DELETE /api/workshop/diagnostic/pricing/:category
-  app.delete("/api/workshop/diagnostic/pricing/:category", requireWorkshopAuth, async (req: Request, res: Response) => {
+  app.delete("/api/workshop/diagnostic/pricing/:category", authenticateUser, requireWorkshopAuth, async (req: Request, res: Response) => {
     try {
       const workshop = (req as any).workshop;
       const { category } = req.params;
@@ -481,7 +533,7 @@ export function createDiagnosticRoutes(app: Router) {
   // ============================================
 
   // GET /api/workshop/diagnostic/slots
-  app.get("/api/workshop/diagnostic/slots", requireWorkshopAuth, async (req: Request, res: Response) => {
+  app.get("/api/workshop/diagnostic/slots", authenticateUser, requireWorkshopAuth, async (req: Request, res: Response) => {
     try {
       const workshop = (req as any).workshop;
 
@@ -506,7 +558,7 @@ export function createDiagnosticRoutes(app: Router) {
   });
 
   // POST /api/workshop/diagnostic/slots
-  app.post("/api/workshop/diagnostic/slots", requireWorkshopAuth, async (req: Request, res: Response) => {
+  app.post("/api/workshop/diagnostic/slots", authenticateUser, requireWorkshopAuth, async (req: Request, res: Response) => {
     try {
       const workshop = (req as any).workshop;
       const slotData = SlotSchema.parse(req.body);
@@ -575,7 +627,7 @@ export function createDiagnosticRoutes(app: Router) {
   });
 
   // PUT /api/workshop/diagnostic/slots/:id
-  app.put("/api/workshop/diagnostic/slots/:id", requireWorkshopAuth, async (req: Request, res: Response) => {
+  app.put("/api/workshop/diagnostic/slots/:id", authenticateUser, requireWorkshopAuth, async (req: Request, res: Response) => {
     try {
       const workshop = (req as any).workshop;
       const slotId = parseInt(req.params.id);
@@ -616,7 +668,7 @@ export function createDiagnosticRoutes(app: Router) {
   });
 
   // DELETE /api/workshop/diagnostic/slots/:id
-  app.delete("/api/workshop/diagnostic/slots/:id", requireWorkshopAuth, async (req: Request, res: Response) => {
+  app.delete("/api/workshop/diagnostic/slots/:id", authenticateUser, requireWorkshopAuth, async (req: Request, res: Response) => {
     try {
       const workshop = (req as any).workshop;
       const slotId = parseInt(req.params.id);
@@ -647,7 +699,7 @@ export function createDiagnosticRoutes(app: Router) {
   // ============================================
 
   // GET /api/workshop/diagnostic/exceptions
-  app.get("/api/workshop/diagnostic/exceptions", requireWorkshopAuth, async (req: Request, res: Response) => {
+  app.get("/api/workshop/diagnostic/exceptions", authenticateUser, requireWorkshopAuth, async (req: Request, res: Response) => {
     try {
       const workshop = (req as any).workshop;
 
@@ -672,7 +724,7 @@ export function createDiagnosticRoutes(app: Router) {
   });
 
   // POST /api/workshop/diagnostic/exceptions
-  app.post("/api/workshop/diagnostic/exceptions", requireWorkshopAuth, async (req: Request, res: Response) => {
+  app.post("/api/workshop/diagnostic/exceptions", authenticateUser, requireWorkshopAuth, async (req: Request, res: Response) => {
     try {
       const workshop = (req as any).workshop;
       const exceptionData = ExceptionSchema.parse(req.body);
@@ -709,7 +761,7 @@ export function createDiagnosticRoutes(app: Router) {
   });
 
   // DELETE /api/workshop/diagnostic/exceptions/:id
-  app.delete("/api/workshop/diagnostic/exceptions/:id", requireWorkshopAuth, async (req: Request, res: Response) => {
+  app.delete("/api/workshop/diagnostic/exceptions/:id", authenticateUser, requireWorkshopAuth, async (req: Request, res: Response) => {
     try {
       const workshop = (req as any).workshop;
       const exceptionId = parseInt(req.params.id);
@@ -731,6 +783,200 @@ export function createDiagnosticRoutes(app: Router) {
       return res.status(500).json({
         success: false,
         message: "Erro ao remover exceção"
+      });
+    }
+  });
+
+  // ============================================
+  // 5. GESTÃO DE AGENDAMENTOS DE DIAGNÓSTICO
+  // ============================================
+
+  // GET /api/workshop/diagnostic/appointments
+  app.get("/api/workshop/diagnostic/appointments", authenticateUser, requireWorkshopAuth, async (req: Request, res: Response) => {
+    try {
+      const workshop = (req as any).workshop;
+      const { date, status } = req.query;
+
+      console.log('📅 Buscando agendamentos de diagnóstico para oficina:', workshop.id);
+
+      // Construir query base
+      let whereConditions = [eq(appointments.workshopId, workshop.id)];
+
+      // Filtrar por data se fornecida
+      if (date && typeof date === 'string') {
+        whereConditions.push(eq(appointments.preferredDate, date));
+      }
+
+      // Filtrar por status se fornecido
+      if (status && typeof status === 'string' && status !== 'all') {
+        whereConditions.push(eq(appointments.status, status));
+      }
+
+      // Buscar agendamentos
+      const diagnosticAppointments = await db
+        .select()
+        .from(appointments)
+        .where(and(...whereConditions))
+        .orderBy(appointments.preferredDate, appointments.preferredTime);
+
+      console.log('✅ Encontrados', diagnosticAppointments.length, 'agendamentos de diagnóstico');
+
+      return res.json({
+        success: true,
+        data: diagnosticAppointments
+      });
+
+    } catch (error) {
+      console.error("Erro ao buscar agendamentos de diagnóstico:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Erro ao buscar agendamentos"
+      });
+    }
+  });
+
+  // PUT /api/workshop/diagnostic/appointments/:id/status
+  app.put("/api/workshop/diagnostic/appointments/:id/status", authenticateUser, requireWorkshopAuth, async (req: Request, res: Response) => {
+    try {
+      const workshop = (req as any).workshop;
+      const appointmentId = parseInt(req.params.id);
+      const { status } = req.body;
+
+      console.log('🔄 Atualizando status do agendamento:', appointmentId, 'para:', status);
+
+      // Validar status
+      const validStatuses = ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Status inválido"
+        });
+      }
+
+      // Atualizar agendamento
+      const result = await db
+        .update(appointments)
+        .set({
+          status,
+          updatedAt: new Date()
+        })
+        .where(and(
+          eq(appointments.id, appointmentId),
+          eq(appointments.workshopId, workshop.id)
+        ))
+        .returning();
+
+      if (result.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Agendamento não encontrado"
+        });
+      }
+
+      console.log('✅ Status do agendamento atualizado com sucesso');
+
+      return res.json({
+        success: true,
+        data: result[0]
+      });
+
+    } catch (error) {
+      console.error("Erro ao atualizar status do agendamento:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Erro ao atualizar status"
+      });
+    }
+  });
+
+  // POST /api/workshop/diagnostic/appointments/:id/check-in
+  app.post("/api/workshop/diagnostic/appointments/:id/check-in", authenticateUser, requireWorkshopAuth, async (req: Request, res: Response) => {
+    try {
+      const workshop = (req as any).workshop;
+      const appointmentId = parseInt(req.params.id);
+
+      console.log('🏁 Fazendo check-in do agendamento:', appointmentId);
+
+      // Fazer check-in
+      const result = await db
+        .update(appointments)
+        .set({
+          status: 'in_progress',
+          checkInTime: new Date(),
+          updatedAt: new Date()
+        })
+        .where(and(
+          eq(appointments.id, appointmentId),
+          eq(appointments.workshopId, workshop.id)
+        ))
+        .returning();
+
+      if (result.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Agendamento não encontrado"
+        });
+      }
+
+      console.log('✅ Check-in realizado com sucesso');
+
+      return res.json({
+        success: true,
+        data: result[0]
+      });
+
+    } catch (error) {
+      console.error("Erro ao fazer check-in:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Erro ao fazer check-in"
+      });
+    }
+  });
+
+  // POST /api/workshop/diagnostic/appointments/:id/check-out
+  app.post("/api/workshop/diagnostic/appointments/:id/check-out", authenticateUser, requireWorkshopAuth, async (req: Request, res: Response) => {
+    try {
+      const workshop = (req as any).workshop;
+      const appointmentId = parseInt(req.params.id);
+      const { notes } = req.body;
+
+      console.log('🏁 Fazendo check-out do agendamento:', appointmentId);
+
+      // Fazer check-out
+      const result = await db
+        .update(appointments)
+        .set({
+          status: 'completed',
+          checkOutTime: new Date(),
+          serviceNotes: notes || null,
+          updatedAt: new Date()
+        })
+        .where(and(
+          eq(appointments.id, appointmentId),
+          eq(appointments.workshopId, workshop.id)
+        ))
+        .returning();
+
+      if (result.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Agendamento não encontrado"
+        });
+      }
+
+      console.log('✅ Check-out realizado com sucesso');
+
+      return res.json({
+        success: true,
+        data: result[0]
+      });
+
+    } catch (error) {
+      console.error("Erro ao fazer check-out:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Erro ao fazer check-out"
       });
     }
   });
