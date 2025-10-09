@@ -39,6 +39,7 @@ export function useUserAnalytics() {
     mapRenderTime: 0,
     cacheHitRate: 0
   });
+  const [isMounted, setIsMounted] = useState(true);
 
   const sessionRef = useRef<string>('');
   const startTimeRef = useRef<number>(Date.now());
@@ -114,52 +115,58 @@ export function useUserAnalytics() {
     data: Record<string, any> = {},
     persist = true
   ) => {
-    const event: AnalyticsEvent = {
-      id: generateEventId(),
-      type,
-      timestamp: Date.now(),
-      data: {
-        ...data,
-        userAgent: navigator.userAgent,
-        viewport: `${window.innerWidth}x${window.innerHeight}`,
-        language: navigator.language,
-        connectionType: (navigator as any).connection?.effectiveType || 'unknown'
-      },
-      sessionId: sessionRef.current
-    };
+    if (!isMounted) return;
 
-    setEvents(prev => {
-      const newEvents = [event, ...prev];
-      // Manter apenas os últimos eventos
-      return newEvents.slice(0, MAX_EVENTS_STORED);
-    });
+    try {
+      const event: AnalyticsEvent = {
+        id: generateEventId(),
+        type,
+        timestamp: Date.now(),
+        data: {
+          ...data,
+          userAgent: navigator.userAgent,
+          viewport: `${window.innerWidth}x${window.innerHeight}`,
+          language: navigator.language,
+          connectionType: (navigator as any).connection?.effectiveType || 'unknown'
+        },
+        sessionId: sessionRef.current
+      };
 
-    // Atualizar contador de interações
-    interactionCountRef.current++;
+      setEvents(prev => {
+        const newEvents = [event, ...prev];
+        // Manter apenas os últimos eventos
+        return newEvents.slice(0, MAX_EVENTS_STORED);
+      });
 
-    // Atualizar dados da sessão
-    setSessionData(prev => prev ? {
-      ...prev,
-      totalInteractions: interactionCountRef.current,
-      ...(type === 'search' && { searchCount: prev.searchCount + 1 }),
-      ...(type === 'workshop_view' && { workshopViews: prev.workshopViews + 1 }),
-      ...(type === 'error' && { errors: prev.errors + 1 })
-    } : null);
+      // Atualizar contador de interações
+      interactionCountRef.current++;
 
-    // Persistir se necessário
-    if (persist) {
-      try {
-        const stored = localStorage.getItem(ANALYTICS_KEY);
-        const existingEvents = stored ? JSON.parse(stored) : [];
-        const allEvents = [event, ...existingEvents].slice(0, MAX_EVENTS_STORED);
-        localStorage.setItem(ANALYTICS_KEY, JSON.stringify(allEvents));
-      } catch (error) {
-        console.warn('Failed to persist analytics event:', error);
+      // Atualizar dados da sessão
+      setSessionData(prev => prev ? {
+        ...prev,
+        totalInteractions: interactionCountRef.current,
+        ...(type === 'search' && { searchCount: prev.searchCount + 1 }),
+        ...(type === 'workshop_view' && { workshopViews: prev.workshopViews + 1 }),
+        ...(type === 'error' && { errors: prev.errors + 1 })
+      } : null);
+
+      // Persistir se necessário
+      if (persist) {
+        try {
+          const stored = localStorage.getItem(ANALYTICS_KEY);
+          const existingEvents = stored ? JSON.parse(stored) : [];
+          const allEvents = [event, ...existingEvents].slice(0, MAX_EVENTS_STORED);
+          localStorage.setItem(ANALYTICS_KEY, JSON.stringify(allEvents));
+        } catch (error) {
+          console.warn('Failed to persist analytics event:', error);
+        }
       }
-    }
 
-    console.log(`📊 Tracked ${type}:`, data);
-  }, [generateEventId]);
+      console.log(`📊 Tracked ${type}:`, data);
+    } catch (error) {
+      console.warn('Failed to track event in useUserAnalytics:', error);
+    }
+  }, [generateEventId, isMounted]);
 
   /**
    * Eventos específicos para facilitar uso
@@ -167,6 +174,8 @@ export function useUserAnalytics() {
   const analytics = {
     // Buscas
     trackSearch: (query: string, filters: any, resultsCount: number, responseTime: number) => {
+      if (!isMounted) return;
+
       trackEvent('search', {
         query,
         filters,
@@ -183,6 +192,7 @@ export function useUserAnalytics() {
 
     // Interações com mapa
     trackMapInteraction: (interaction: 'zoom' | 'pan' | 'marker_click' | 'cluster_expand', data: any = {}) => {
+      if (!isMounted) return;
       trackEvent('map_interaction', {
         interaction,
         ...data,
@@ -192,6 +202,7 @@ export function useUserAnalytics() {
 
     // Visualizações de oficina
     trackWorkshopView: (workshopId: string, source: 'search' | 'map' | 'direct', workshopData: any = {}) => {
+      if (!isMounted) return;
       trackEvent('workshop_view', {
         workshopId,
         source,
@@ -203,6 +214,7 @@ export function useUserAnalytics() {
 
     // Performance
     trackPerformance: (metric: string, value: number, context: any = {}) => {
+      if (!isMounted) return;
       trackEvent('performance', {
         metric,
         value,
@@ -218,6 +230,7 @@ export function useUserAnalytics() {
 
     // Navegação
     trackNavigation: (from: string, to: string, method: 'click' | 'url' | 'back' = 'click') => {
+      if (!isMounted) return;
       trackEvent('navigation', {
         from,
         to,
@@ -228,6 +241,7 @@ export function useUserAnalytics() {
 
     // Erros
     trackError: (error: string, context: any = {}) => {
+      if (!isMounted) return;
       trackEvent('error', {
         error,
         context,
@@ -314,6 +328,13 @@ export function useUserAnalytics() {
     localStorage.removeItem(ANALYTICS_KEY);
     localStorage.removeItem('analytics_session');
     console.log('🗑️ Analytics data cleared');
+  }, []);
+
+  // Cleanup effect when component unmounts
+  useEffect(() => {
+    return () => {
+      setIsMounted(false);
+    };
   }, []);
 
   // Inicializar sessão ao montar
