@@ -17,6 +17,7 @@ interface WorkshopModalMobileProps {
 export default function WorkshopModalMobile({ workshop, open, onClose, source = 'map' }: WorkshopModalMobileProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [swipeAction, setSwipeAction] = useState<'call' | 'navigate' | null>(null);
+  const [isMounted, setIsMounted] = useState(true);
   const { trackConversion } = useAnalytics();
 
   // Spring animation for swipe feedback
@@ -28,18 +29,24 @@ export default function WorkshopModalMobile({ workshop, open, onClose, source = 
   }));
 
   useEffect(() => {
+    if (!isMounted) return;
+
     if (open) {
       setIsAnimating(true);
       // Prevent body scroll when modal is open
       document.body.style.overflow = 'hidden';
 
-      // Track modal view
-      if (workshop) {
-        trackConversion('view_map', workshop.id.toString(), source, {
-          workshopName: workshop.name,
-          workshopCity: workshop.city,
-          interaction: 'modal_open'
-        });
+      // Track modal view only if component is still mounted
+      if (workshop && isMounted) {
+        try {
+          trackConversion('view_map', workshop.id.toString(), source, {
+            workshopName: workshop.name,
+            workshopCity: workshop.city,
+            interaction: 'modal_open'
+          });
+        } catch (error) {
+          console.warn('Failed to track conversion:', error);
+        }
       }
     } else {
       // Restore body scroll
@@ -47,13 +54,31 @@ export default function WorkshopModalMobile({ workshop, open, onClose, source = 
     }
 
     return () => {
+      // Always restore body scroll on cleanup
       document.body.style.overflow = '';
     };
-  }, [open, workshop, trackConversion, source]);
+  }, [open, workshop, trackConversion, source, isMounted]);
+
+  // Cleanup effect when component unmounts
+  useEffect(() => {
+    return () => {
+      setIsMounted(false);
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   const handleClose = () => {
+    if (!isMounted) return;
+
     setIsAnimating(false);
-    setTimeout(onClose, 200); // Wait for animation to complete
+    const timeoutId = setTimeout(() => {
+      if (isMounted) {
+        onClose();
+      }
+    }, 200); // Wait for animation to complete
+
+    // Cleanup timeout if component unmounts
+    return () => clearTimeout(timeoutId);
   };
 
   if (!workshop) return null;
@@ -70,29 +95,39 @@ export default function WorkshopModalMobile({ workshop, open, onClose, source = 
 
   // Handler functions for actions
   const handleCallWorkshop = (phone: string) => {
-    if (workshop) {
+    if (!isMounted || !workshop) return;
+
+    try {
       trackConversion('call', workshop.id.toString(), source, {
         workshopName: workshop.name,
         phone: phone,
         interaction: 'direct_call'
       });
+    } catch (error) {
+      console.warn('Failed to track conversion:', error);
     }
     window.open(`tel:${phone.replace(/\D/g, '')}`, '_self');
   };
 
   const handleNavigateToWorkshop = (workshop: Workshop) => {
-    trackConversion('navigate', workshop.id.toString(), source, {
-      workshopName: workshop.name,
-      destination: 'google_maps',
-      interaction: 'navigate_button'
-    });
+    if (!isMounted) return;
+
+    try {
+      trackConversion('navigate', workshop.id.toString(), source, {
+        workshopName: workshop.name,
+        destination: 'google_maps',
+        interaction: 'navigate_button'
+      });
+    } catch (error) {
+      console.warn('Failed to track conversion:', error);
+    }
     window.open(googleMapsUrl, '_blank');
   };
 
   // Swipe gesture configuration
   const bind = useDrag(
     ({ active, movement: [mx], direction: [xDir], velocity: [vx] }) => {
-      if (!workshop) return;
+      if (!workshop || !isMounted) return;
 
       const trigger = Math.abs(mx) > 50; // Minimum distance to trigger action
       const isQuickSwipe = Math.abs(vx) > 0.5; // Quick swipe detection
@@ -244,11 +279,17 @@ export default function WorkshopModalMobile({ workshop, open, onClose, source = 
                         rel="noopener noreferrer"
                         aria-label={`Enviar mensagem via WhatsApp para ${workshop.name}`}
                         onClick={() => {
-                          trackConversion('whatsapp', workshop.id.toString(), source, {
-                            workshopName: workshop.name,
-                            phone: workshop.phone,
-                            interaction: 'whatsapp_button'
-                          });
+                          if (isMounted) {
+                            try {
+                              trackConversion('whatsapp', workshop.id.toString(), source, {
+                                workshopName: workshop.name,
+                                phone: workshop.phone,
+                                interaction: 'whatsapp_button'
+                              });
+                            } catch (error) {
+                              console.warn('Failed to track WhatsApp conversion:', error);
+                            }
+                          }
                         }}
                       >
                         💬 Falar no WhatsApp
@@ -285,11 +326,17 @@ export default function WorkshopModalMobile({ workshop, open, onClose, source = 
               rel="noopener noreferrer"
               aria-label={`Ver localização de ${workshop.name} no Google Maps`}
               onClick={() => {
-                trackConversion('navigate', workshop.id.toString(), source, {
-                  workshopName: workshop.name,
-                  destination: 'google_maps',
-                  interaction: 'main_button'
-                });
+                if (isMounted) {
+                  try {
+                    trackConversion('navigate', workshop.id.toString(), source, {
+                      workshopName: workshop.name,
+                      destination: 'google_maps',
+                      interaction: 'main_button'
+                    });
+                  } catch (error) {
+                    console.warn('Failed to track navigation conversion:', error);
+                  }
+                }
               }}
             >
               🗺️ Ver no Google Maps

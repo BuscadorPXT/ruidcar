@@ -1,14 +1,16 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { advancedAnalytics } from '@/services/AdvancedAnalytics';
 
 /**
  * Hook para facilitar o uso do sistema de analytics avançado
  */
 export function useAnalytics() {
+  const isMountedRef = useRef(true);
+
   useEffect(() => {
     // Analytics já é inicializado automaticamente no singleton
     return () => {
-      // Cleanup será feito quando o componente principal for desmontado
+      isMountedRef.current = false;
     };
   }, []);
 
@@ -21,21 +23,40 @@ export function useAnalytics() {
     source: 'search' | 'nearest_hero' | 'map' | 'proximity_notification',
     metadata?: any
   ) => {
-    advancedAnalytics.trackConversion(type, workshopId, source, metadata);
+    if (!isMountedRef.current) return;
+
+    try {
+      advancedAnalytics.trackConversion(type, workshopId, source, metadata);
+    } catch (error) {
+      console.warn('Failed to track conversion in useAnalytics:', error);
+    }
   }, []);
 
   /**
    * Rastrear evento customizado
    */
   const trackEvent = useCallback((eventName: string, eventData: any) => {
-    advancedAnalytics.trackEvent(eventName, eventData);
+    if (!isMountedRef.current) return;
+
+    try {
+      advancedAnalytics.trackEvent(eventName, eventData);
+    } catch (error) {
+      console.warn('Failed to track event in useAnalytics:', error);
+    }
   }, []);
 
   /**
    * Configurar teste A/B
    */
   const setupABTest = useCallback((experimentId: string, variants: string[]) => {
-    return advancedAnalytics.setupABTest(experimentId, variants);
+    if (!isMountedRef.current) return null;
+
+    try {
+      return advancedAnalytics.setupABTest(experimentId, variants);
+    } catch (error) {
+      console.warn('Failed to setup A/B test in useAnalytics:', error);
+      return null;
+    }
   }, []);
 
   /**
@@ -46,14 +67,27 @@ export function useAnalytics() {
     outcome: 'conversion' | 'bounce' | 'custom',
     value?: any
   ) => {
-    advancedAnalytics.trackABTestResult(experimentId, outcome, value);
+    if (!isMountedRef.current) return;
+
+    try {
+      advancedAnalytics.trackABTestResult(experimentId, outcome, value);
+    } catch (error) {
+      console.warn('Failed to track A/B test result in useAnalytics:', error);
+    }
   }, []);
 
   /**
    * Obter resumo da sessão atual
    */
   const getSessionSummary = useCallback(() => {
-    return advancedAnalytics.getSessionSummary();
+    if (!isMountedRef.current) return null;
+
+    try {
+      return advancedAnalytics.getSessionSummary();
+    } catch (error) {
+      console.warn('Failed to get session summary in useAnalytics:', error);
+      return null;
+    }
   }, []);
 
   return {

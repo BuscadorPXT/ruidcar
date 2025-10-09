@@ -319,28 +319,34 @@ export class AdvancedAnalytics {
     source: ConversionEvent['source'],
     metadata?: any
   ): void {
-    const conversionEvent: ConversionEvent = {
-      type,
-      workshopId,
-      source,
-      timestamp: Date.now(),
-      sessionId: this.sessionData.sessionId
-    };
+    if (!this.isTracking) return;
 
-    this.trackEvent('conversion', { ...conversionEvent, ...metadata });
+    try {
+      const conversionEvent: ConversionEvent = {
+        type,
+        workshopId,
+        source,
+        timestamp: Date.now(),
+        sessionId: this.sessionData.sessionId
+      };
 
-    // Enviar para Google Analytics
-    if (typeof gtag !== 'undefined') {
-      gtag('event', 'conversion', {
-        event_category: 'workshop_interaction',
-        event_label: `${type}_${source}`,
-        workshop_id: workshopId,
-        custom_parameter_1: source
-      });
+      this.trackEvent('conversion', { ...conversionEvent, ...metadata });
+
+      // Enviar para Google Analytics
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'conversion', {
+          event_category: 'workshop_interaction',
+          event_label: `${type}_${source}`,
+          workshop_id: workshopId,
+          custom_parameter_1: source
+        });
+      }
+
+      // Calcular funil de conversão
+      this.updateConversionFunnel(type, source);
+    } catch (error) {
+      console.warn('Failed to track conversion in AdvancedAnalytics:', error);
     }
-
-    // Calcular funil de conversão
-    this.updateConversionFunnel(type, source);
   }
 
   /**
@@ -349,24 +355,28 @@ export class AdvancedAnalytics {
   trackEvent(eventName: string, eventData: any): void {
     if (!this.isTracking) return;
 
-    const event = {
-      name: eventName,
-      timestamp: Date.now(),
-      sessionId: this.sessionData.sessionId,
-      url: window.location.href,
-      data: eventData
-    };
+    try {
+      const event = {
+        name: eventName,
+        timestamp: Date.now(),
+        sessionId: this.sessionData.sessionId,
+        url: window.location.href,
+        data: eventData
+      };
 
-    this.sessionData.events.push(event);
-    this.saveSession(this.sessionData);
+      this.sessionData.events.push(event);
+      this.saveSession(this.sessionData);
 
-    if (this.config.debug) {
-      console.log('📊 Analytics Event:', event);
-    }
+      if (this.config.debug) {
+        console.log('📊 Analytics Event:', event);
+      }
 
-    // Enviar para endpoint personalizado se configurado
-    if (this.config.apiEndpoint) {
-      this.sendToEndpoint(event);
+      // Enviar para endpoint personalizado se configurado
+      if (this.config.apiEndpoint) {
+        this.sendToEndpoint(event);
+      }
+    } catch (error) {
+      console.warn('Failed to track event in AdvancedAnalytics:', error);
     }
   }
 
