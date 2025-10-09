@@ -9,6 +9,7 @@ import { queryClient } from "./lib/queryClient";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { initIPGeoLocation } from './lib/ipGeoLocation';
 import { initWebVitalsMonitoring } from './lib/webVitals';
+import { globalErrorHandler } from './services/GlobalErrorHandler';
 import SkipLink from "@/components/SkipLink";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import {
@@ -60,6 +61,9 @@ const PageLoader = () => (
 function App() {
   useEffect(() => {
     console.log('🎯 Inicializando aplicação...');
+
+    // Inicializar Global Error Handler primeiro
+    globalErrorHandler.initialize();
 
     // Usa apenas o sistema de IP geolocalização melhorado
     initIPGeoLocation();

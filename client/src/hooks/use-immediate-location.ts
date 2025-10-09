@@ -33,6 +33,7 @@ export function useImmediateLocation() {
     error: null,
     source: null
   });
+  const [isMounted, setIsMounted] = useState(true);
 
   /**
    * Verifica se há localização válida no cache
@@ -153,12 +154,16 @@ export function useImmediateLocation() {
    * Obtém localização com fallback strategy
    */
   const obtainLocation = useCallback(async () => {
+    if (!isMounted) return;
+
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
       // Primeira tentativa: GPS
       try {
         const gpsLocation = await getGPSLocation();
+        if (!isMounted) return;
+
         setCachedLocation(gpsLocation.latitude, gpsLocation.longitude, 'gps');
 
         setState({
@@ -169,12 +174,15 @@ export function useImmediateLocation() {
         });
         return;
       } catch (gpsError) {
+        if (!isMounted) return;
         console.log('GPS failed, trying IP fallback...');
       }
 
       // Segunda tentativa: IP Geolocation
       try {
         const ipLocation = await getIPLocation();
+        if (!isMounted) return;
+
         setCachedLocation(ipLocation.latitude, ipLocation.longitude, 'ip');
 
         setState({
@@ -185,10 +193,12 @@ export function useImmediateLocation() {
         });
         return;
       } catch (ipError) {
+        if (!isMounted) return;
         console.log('IP geolocation also failed');
       }
 
       // Se ambos falharam
+      if (!isMounted) return;
       setState({
         location: null,
         isLoading: false,
@@ -197,6 +207,7 @@ export function useImmediateLocation() {
       });
 
     } catch (error) {
+      if (!isMounted) return;
       setState({
         location: null,
         isLoading: false,
@@ -204,7 +215,7 @@ export function useImmediateLocation() {
         source: null
       });
     }
-  }, [getGPSLocation, getIPLocation, setCachedLocation]);
+  }, [getGPSLocation, getIPLocation, setCachedLocation, isMounted]);
 
   /**
    * Force refresh da localização (ignora cache)
@@ -215,9 +226,20 @@ export function useImmediateLocation() {
   }, [obtainLocation]);
 
   /**
+   * Cleanup effect when component unmounts
+   */
+  useEffect(() => {
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
+
+  /**
    * Effect principal: verifica cache ou obtém nova localização
    */
   useEffect(() => {
+    if (!isMounted) return;
+
     const cached = getCachedLocation();
 
     if (cached) {
@@ -232,7 +254,7 @@ export function useImmediateLocation() {
       // Obtém nova localização
       obtainLocation();
     }
-  }, [getCachedLocation, obtainLocation]);
+  }, [getCachedLocation, obtainLocation, isMounted]);
 
   return {
     ...state,
