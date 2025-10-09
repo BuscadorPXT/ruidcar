@@ -20,15 +20,33 @@ export default function WorkshopSearch({ onSearch, onNearbySearch, isLoading, is
   const [localSearchQuery, setLocalSearchQuery] = useState(externalSearchQuery);
   const [isSearching, setIsSearching] = useState(false);
   const [useSmartSearch, setUseSmartSearch] = useState(false);
+  const [isMounted, setIsMounted] = useState(true);
+  const [placeholderVariant, setPlaceholderVariant] = useState<string>('classic');
+  const [buttonLayoutVariant, setButtonLayoutVariant] = useState<string>('side');
   const { toast } = useToast();
   const { trackEvent, setupABTest, trackABTestResult } = useAnalytics();
   const isMobile = useMobile();
 
-  // A/B Testing para placeholders
-  const placeholderVariant = setupABTest('search_placeholder_test', ['classic', 'friendly', 'action']);
+  // Setup A/B Testing in useEffect
+  useEffect(() => {
+    if (isMounted) {
+      try {
+        const placeholder = setupABTest('search_placeholder_test', ['classic', 'friendly', 'action']) || 'classic';
+        const buttonLayout = setupABTest('button_layout_test', ['side', 'below']) || 'side';
+        setPlaceholderVariant(placeholder);
+        setButtonLayoutVariant(buttonLayout);
+      } catch (error) {
+        console.warn('Failed to setup A/B tests:', error);
+      }
+    }
+  }, [setupABTest, isMounted]);
 
-  // A/B Testing para layout do botão
-  const buttonLayoutVariant = setupABTest('button_layout_test', ['side', 'below']);
+  // Cleanup effect when component unmounts
+  useEffect(() => {
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
 
   // Sync local state with external search query from URL
   useEffect(() => {
@@ -52,26 +70,32 @@ export default function WorkshopSearch({ onSearch, onNearbySearch, isLoading, is
 
     setIsSearching(true);
     try {
-      // Track search event
-      trackEvent('workshop_search', {
-        query: query.toLowerCase(),
-        queryLength: query.length,
-        searchType: useSmartSearch ? 'smart' : 'traditional',
-        isMobile,
-        timestamp: Date.now(),
-        placeholderVariant,
-        buttonLayoutVariant
-      });
+      // Track search event only if component is mounted
+      if (isMounted) {
+        try {
+          trackEvent('workshop_search', {
+            query: query.toLowerCase(),
+            queryLength: query.length,
+            searchType: useSmartSearch ? 'smart' : 'traditional',
+            isMobile,
+            timestamp: Date.now(),
+            placeholderVariant,
+            buttonLayoutVariant
+          });
 
-      // Track A/B test results (conversion = successful search)
-      trackABTestResult('search_placeholder_test', 'conversion', {
-        searchPerformed: true,
-        queryLength: query.length
-      });
-      trackABTestResult('button_layout_test', 'conversion', {
-        searchPerformed: true,
-        queryLength: query.length
-      });
+          // Track A/B test results (conversion = successful search)
+          trackABTestResult('search_placeholder_test', 'conversion', {
+            searchPerformed: true,
+            queryLength: query.length
+          });
+          trackABTestResult('button_layout_test', 'conversion', {
+            searchPerformed: true,
+            queryLength: query.length
+          });
+        } catch (error) {
+          console.warn('Failed to track search analytics:', error);
+        }
+      }
 
       await onSearch(query);
     } catch (error) {
@@ -107,13 +131,19 @@ export default function WorkshopSearch({ onSearch, onNearbySearch, isLoading, is
     setLocalSearchQuery(searchTerm);
 
     // Track location selection
-    trackEvent('location_autocomplete_select', {
-      locationName: location.name,
-      locationState: location.state,
-      hasCoordinates: !!location.coordinates,
-      isMobile,
-      timestamp: Date.now()
-    });
+    if (isMounted) {
+      try {
+        trackEvent('location_autocomplete_select', {
+          locationName: location.name,
+          locationState: location.state,
+          hasCoordinates: !!location.coordinates,
+          isMobile,
+          timestamp: Date.now()
+        });
+      } catch (error) {
+        console.warn('Failed to track location selection:', error);
+      }
+    }
 
     // If we have coordinates, we could do a proximity search, but for now just search by name
     await performSearch(searchTerm);
@@ -154,12 +184,18 @@ export default function WorkshopSearch({ onSearch, onNearbySearch, isLoading, is
           variant={useSmartSearch ? "outline" : "ghost"}
           size="sm"
           onClick={() => {
-            trackEvent('search_mode_toggle', {
-              newMode: 'traditional',
-              previousMode: useSmartSearch ? 'smart' : 'traditional',
-              isMobile,
-              timestamp: Date.now()
-            });
+            if (isMounted) {
+              try {
+                trackEvent('search_mode_toggle', {
+                  newMode: 'traditional',
+                  previousMode: useSmartSearch ? 'smart' : 'traditional',
+                  isMobile,
+                  timestamp: Date.now()
+                });
+              } catch (error) {
+                console.warn('Failed to track search mode toggle:', error);
+              }
+            }
             setUseSmartSearch(false);
           }}
           className="text-xs"
@@ -171,12 +207,18 @@ export default function WorkshopSearch({ onSearch, onNearbySearch, isLoading, is
           variant={useSmartSearch ? "default" : "outline"}
           size="sm"
           onClick={() => {
-            trackEvent('search_mode_toggle', {
-              newMode: 'smart',
-              previousMode: useSmartSearch ? 'smart' : 'traditional',
-              isMobile,
-              timestamp: Date.now()
-            });
+            if (isMounted) {
+              try {
+                trackEvent('search_mode_toggle', {
+                  newMode: 'smart',
+                  previousMode: useSmartSearch ? 'smart' : 'traditional',
+                  isMobile,
+                  timestamp: Date.now()
+                });
+              } catch (error) {
+                console.warn('Failed to track search mode toggle:', error);
+              }
+            }
             setUseSmartSearch(true);
           }}
           className="text-xs"
@@ -310,10 +352,16 @@ export default function WorkshopSearch({ onSearch, onNearbySearch, isLoading, is
           variant="outline"
           onClick={() => {
             // Track nearby search
-            trackEvent('nearby_search', {
-              isMobile,
-              timestamp: Date.now()
-            });
+            if (isMounted) {
+              try {
+                trackEvent('nearby_search', {
+                  isMobile,
+                  timestamp: Date.now()
+                });
+              } catch (error) {
+                console.warn('Failed to track nearby search:', error);
+              }
+            }
             onNearbySearch();
           }}
           disabled={isLoading || isGeolocating}

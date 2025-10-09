@@ -25,6 +25,7 @@ export default function NearestWorkshopHero({ onViewOnMap, className = '' }: Nea
   const [nearestWorkshop, setNearestWorkshop] = useState<NearestWorkshopData | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(true);
 
   // Fetch nearest workshop when location is available
   useEffect(() => {
@@ -32,6 +33,13 @@ export default function NearestWorkshopHero({ onViewOnMap, className = '' }: Nea
       fetchNearestWorkshop(location[0], location[1]);
     }
   }, [location, locationLoading]);
+
+  // Cleanup effect when component unmounts
+  useEffect(() => {
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
 
   const fetchNearestWorkshop = async (lat: number, lng: number) => {
     setIsSearching(true);
@@ -46,12 +54,18 @@ export default function NearestWorkshopHero({ onViewOnMap, className = '' }: Nea
         console.log('✅ Nearest workshop found:', data.workshop.name, `(${data.distance.toFixed(1)}km)`);
 
         // Track nearest workshop found
-        trackConversion('view_map', data.workshop.id.toString(), 'nearest_hero', {
-          workshopName: data.workshop.name,
-          distance: data.distance,
-          locationSource: source,
-          interaction: 'nearest_found'
-        });
+        if (isMounted) {
+          try {
+            trackConversion('view_map', data.workshop.id.toString(), 'nearest_hero', {
+              workshopName: data.workshop.name,
+              distance: data.distance,
+              locationSource: source,
+              interaction: 'nearest_found'
+            });
+          } catch (error) {
+            console.warn('Failed to track nearest workshop found:', error);
+          }
+        }
       } else {
         throw new Error(data.message || 'Nenhuma oficina encontrada');
       }
@@ -65,23 +79,31 @@ export default function NearestWorkshopHero({ onViewOnMap, className = '' }: Nea
   };
 
   const handleCallWorkshop = (phone: string) => {
-    if (nearestWorkshop) {
-      trackConversion('call', nearestWorkshop.workshop.id.toString(), 'nearest_hero', {
-        workshopName: nearestWorkshop.workshop.name,
-        distance: nearestWorkshop.distance,
-        interaction: 'hero_call_button'
-      });
+    if (nearestWorkshop && isMounted) {
+      try {
+        trackConversion('call', nearestWorkshop.workshop.id.toString(), 'nearest_hero', {
+          workshopName: nearestWorkshop.workshop.name,
+          distance: nearestWorkshop.distance,
+          interaction: 'hero_call_button'
+        });
+      } catch (error) {
+        console.warn('Failed to track call conversion:', error);
+      }
     }
     window.open(`tel:${phone.replace(/\D/g, '')}`, '_self');
   };
 
   const handleNavigateToWorkshop = (workshop: Workshop) => {
-    if (nearestWorkshop) {
-      trackConversion('navigate', nearestWorkshop.workshop.id.toString(), 'nearest_hero', {
-        workshopName: nearestWorkshop.workshop.name,
-        distance: nearestWorkshop.distance,
-        interaction: 'hero_navigate_button'
-      });
+    if (nearestWorkshop && isMounted) {
+      try {
+        trackConversion('navigate', nearestWorkshop.workshop.id.toString(), 'nearest_hero', {
+          workshopName: nearestWorkshop.workshop.name,
+          distance: nearestWorkshop.distance,
+          interaction: 'hero_navigate_button'
+        });
+      } catch (error) {
+        console.warn('Failed to track navigate conversion:', error);
+      }
     }
     const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
       `${workshop.name} ${workshop.address}`
@@ -92,12 +114,16 @@ export default function NearestWorkshopHero({ onViewOnMap, className = '' }: Nea
   const handleWhatsApp = (workshop: Workshop) => {
     if (!workshop.phone) return;
 
-    if (nearestWorkshop) {
-      trackConversion('whatsapp', nearestWorkshop.workshop.id.toString(), 'nearest_hero', {
-        workshopName: nearestWorkshop.workshop.name,
-        distance: nearestWorkshop.distance,
-        interaction: 'hero_whatsapp_button'
-      });
+    if (nearestWorkshop && isMounted) {
+      try {
+        trackConversion('whatsapp', nearestWorkshop.workshop.id.toString(), 'nearest_hero', {
+          workshopName: nearestWorkshop.workshop.name,
+          distance: nearestWorkshop.distance,
+          interaction: 'hero_whatsapp_button'
+        });
+      } catch (error) {
+        console.warn('Failed to track WhatsApp conversion:', error);
+      }
     }
 
     const whatsappUrl = `https://wa.me/55${workshop.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
@@ -229,12 +255,16 @@ export default function NearestWorkshopHero({ onViewOnMap, className = '' }: Nea
             {onViewOnMap && (
               <Button
                 onClick={() => {
-                  if (nearestWorkshop) {
-                    trackConversion('view_map', nearestWorkshop.workshop.id.toString(), 'nearest_hero', {
-                      workshopName: nearestWorkshop.workshop.name,
-                      distance: nearestWorkshop.distance,
-                      interaction: 'hero_view_map_button'
-                    });
+                  if (nearestWorkshop && isMounted) {
+                    try {
+                      trackConversion('view_map', nearestWorkshop.workshop.id.toString(), 'nearest_hero', {
+                        workshopName: nearestWorkshop.workshop.name,
+                        distance: nearestWorkshop.distance,
+                        interaction: 'hero_view_map_button'
+                      });
+                    } catch (error) {
+                      console.warn('Failed to track view map conversion:', error);
+                    }
                   }
                   onViewOnMap(workshop);
                 }}
