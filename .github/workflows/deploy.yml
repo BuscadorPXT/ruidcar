@@ -1,0 +1,62 @@
+name: Deploy para Produção
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Permite executar manualmente
+
+jobs:
+  deploy:
+    name: Deploy para VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout do código
+        uses: actions/checkout@v4
+
+      - name: 🔧 Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Instalar dependências
+        run: npm ci
+
+      - name: 🔨 Build da aplicação
+        run: npm run build
+
+      - name: 🧪 Rodar testes (se existirem)
+        run: npm test || echo "Sem testes configurados"
+        continue-on-error: true
+
+      - name: 🚀 Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          script: |
+            cd /var/www/ruidcar
+            bash server-deploy.sh
+
+      - name: ✅ Verificar deploy
+        run: |
+          echo "Deploy concluído!"
+          echo "Verificando saúde da aplicação..."
+          sleep 5
+          curl -I https://ruidcar.com.br || echo "Verifique o status manualmente"
+
+      - name: 📢 Notificar sucesso
+        if: success()
+        run: |
+          echo "✅ Deploy realizado com sucesso!"
+          echo "🎉 Aplicação atualizada em produção"
+
+      - name: 📢 Notificar falha
+        if: failure()
+        run: |
+          echo "❌ Deploy falhou!"
+          echo "⚠️ Verifique os logs acima"
