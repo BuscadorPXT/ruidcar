@@ -36,34 +36,60 @@ function calculateZoomFromRadius(radiusKm: number): number {
 }
 
 // Component to handle map centering with smooth animation
-function MapCenterController({ center, searchRadius }: { center: [number, number]; searchRadius?: number }) {
+function MapCenterController({ center, searchRadius, enabled = true }: { center: [number, number]; searchRadius?: number; enabled?: boolean }) {
   const map = useMap();
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    const targetZoom = searchRadius ? calculateZoomFromRadius(searchRadius) : map.getZoom();
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
-    // Smooth animated transition to new center and zoom
-    map.flyTo(center, targetZoom, {
-      duration: 2.5, // 2.5 seconds animation
-      easeLinearity: 0.1
-    });
-  }, [center, searchRadius, map]);
+  useEffect(() => {
+    if (!isMountedRef.current || !enabled) return;
+
+    try {
+      const targetZoom = searchRadius ? calculateZoomFromRadius(searchRadius) : map.getZoom();
+
+      // Smooth animated transition to new center and zoom
+      map.flyTo(center, targetZoom, {
+        duration: 2.5, // 2.5 seconds animation
+        easeLinearity: 0.1
+      });
+    } catch (error) {
+      console.warn('MapCenterController flyTo error:', error);
+    }
+  }, [center, searchRadius, map, enabled]);
 
   return null;
 }
 
 // Component to fit bounds to all markers
-function FitBoundsController({ workshops }: { workshops: Workshop[] }) {
+function FitBoundsController({ workshops, enabled = true }: { workshops: Workshop[]; enabled?: boolean }) {
   const map = useMap();
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    if (workshops.length > 0) {
-      const bounds = L.latLngBounds(
-        workshops.map(w => [parseFloat(w.latitude), parseFloat(w.longitude)])
-      );
-      map.fitBounds(bounds, { padding: [50, 50] });
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isMountedRef.current || !enabled) return;
+
+    try {
+      if (workshops.length > 0) {
+        const bounds = L.latLngBounds(
+          workshops.map(w => [parseFloat(w.latitude), parseFloat(w.longitude)])
+        );
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+    } catch (error) {
+      console.warn('FitBoundsController fitBounds error:', error);
     }
-  }, [workshops, map]);
+  }, [workshops, map, enabled]);
 
   return null;
 }
@@ -71,10 +97,19 @@ function FitBoundsController({ workshops }: { workshops: Workshop[] }) {
 // Component to track map zoom level
 function MapEventHandler({ onZoomChange }: { onZoomChange: (zoom: number) => void }) {
   const map = useMap();
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const handleZoom = () => {
-      onZoomChange(map.getZoom());
+      if (isMountedRef.current) {
+        onZoomChange(map.getZoom());
+      }
     };
 
     map.on('zoomend', handleZoom);
@@ -125,16 +160,26 @@ export default function WorkshopMap({
   const [userLocation, setUserLocation] = useState<[number, number] | null>(propUserLocation || null);
   const [zoomLevel, setZoomLevel] = useState(5);
   const [isMapReady, setIsMapReady] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const isMountedRef = useRef(true);
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Initialize component and setup cleanup
+  useEffect(() => {
+    setIsInitialized(true);
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Track if we have a user location for showing radius circle
   const hasUserLocation = userLocation || propUserLocation;
   const actualUserLocation = propUserLocation || userLocation;
 
-  // Use clustering for better performance
+  // Use clustering for better performance - only when initialized
   const { clusters } = useWorkshopClustering(workshops, {
-    enabled: enableClustering,
+    enabled: enableClustering && isInitialized,
     zoomLevel: zoomLevel,
     clusterDistance: 0.08, // Adjusted for better grouping
     minClusterSize: 3
@@ -161,15 +206,17 @@ export default function WorkshopMap({
 
   // Sync with prop user location
   useEffect(() => {
-    if (propUserLocation) {
+    if (propUserLocation && isMountedRef.current && isInitialized) {
       setUserLocation(propUserLocation);
     }
-  }, [propUserLocation]);
+  }, [propUserLocation, isInitialized]);
 
   // Garantir que o container está pronto antes de renderizar o mapa
   useEffect(() => {
+    if (!isInitialized) return;
+
     const checkContainer = () => {
-      if (containerRef.current) {
+      if (containerRef.current && isMountedRef.current) {
         setIsMapReady(true);
       }
     };
@@ -178,24 +225,45 @@ export default function WorkshopMap({
     checkContainer();
 
     // Fallback: verificar após um pequeno delay
-    const timer = setTimeout(checkContainer, 100);
+    const timer = setTimeout(() => {
+      if (isMountedRef.current) {
+        checkContainer();
+      }
+    }, 100);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [isInitialized]);
 
   useEffect(() => {
     // Get user location only if not provided via props
-    if (!propUserLocation && navigator.geolocation) {
+    if (!propUserLocation && navigator.geolocation && isMountedRef.current && isInitialized) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setUserLocation([position.coords.latitude, position.coords.longitude]);
+          if (isMountedRef.current) {
+            setUserLocation([position.coords.latitude, position.coords.longitude]);
+          }
         },
         (error) => {
-          console.log("Could not get user location:", error);
+          if (isMountedRef.current) {
+            console.log("Could not get user location:", error);
+          }
         }
       );
     }
-  }, [propUserLocation]);
+  }, [propUserLocation, isInitialized]);
+
+
+  // Early return if not initialized to ensure consistent hook order
+  if (!isInitialized) {
+    return (
+      <div className="h-full w-full flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+          <p className="text-gray-600 text-sm">Inicializando mapa...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full w-full rounded-lg overflow-hidden shadow-lg">
@@ -236,16 +304,21 @@ export default function WorkshopMap({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {/* Map event tracking */}
+        {/* Map event tracking - always render */}
         <MapEventHandler onZoomChange={setZoomLevel} />
 
-        {/* Animated center controller - only when user location is detected */}
-        {(center[0] !== -15.7801 || center[1] !== -47.9292) && (
-          <MapCenterController center={center} searchRadius={searchRadius} />
-        )}
+        {/* Animated center controller - always render but with enabled prop */}
+        <MapCenterController
+          center={center}
+          searchRadius={searchRadius}
+          enabled={center[0] !== -15.7801 || center[1] !== -47.9292}
+        />
 
-        {/* Fit bounds only when showing all workshops without user location */}
-        {workshops.length > 0 && !hasUserLocation && <FitBoundsController workshops={workshops} />}
+        {/* Fit bounds controller - always render but with enabled prop */}
+        <FitBoundsController
+          workshops={workshops}
+          enabled={workshops.length > 0 && !hasUserLocation}
+        />
 
         {/* Search radius circle - show when we have user location */}
         {actualUserLocation && (
@@ -276,11 +349,22 @@ export default function WorkshopMap({
         {/* Clustered markers */}
         {clusters.map((cluster) => {
           const isSelected = !!selectedWorkshop && cluster.workshops.some(w => w.id === selectedWorkshop.id);
+
+          const safeOnWorkshopClick = (workshop: Workshop) => {
+            try {
+              if (isMountedRef.current) {
+                onWorkshopClick(workshop);
+              }
+            } catch (error) {
+              console.warn('WorkshopClick error:', error);
+            }
+          };
+
           return (
             <ClusterMarker
               key={cluster.id}
               cluster={cluster}
-              onWorkshopClick={onWorkshopClick}
+              onWorkshopClick={safeOnWorkshopClick}
               isSelected={isSelected}
             />
           );

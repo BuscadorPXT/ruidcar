@@ -1,111 +1,118 @@
-# ERROS.md - Análise Completa de Erros Possíveis na Aplicação RuidCar
+# ERROS.md - Anï¿½lise Completa de Erros Possï¿½veis na Aplicaï¿½ï¿½o RuidCar
 
-## =¨ **ERROS REACT #310 IDENTIFICADOS**
+## =ï¿½ **ERROS REACT #310 IDENTIFICADOS**
 
 ### **IDs de Erro Reportados:**
 - `iu9rf1yqdka` - 09/10/2025, 13:48:05
 - `z4um7lqvu4h` - 09/10/2025, 14:00:29
 - `iwga3rwqzqn` - 09/10/2025, 14:07:20
+- `q9y5ttgc91p` - 03/11/2025, 14:07:06 - **MOBILE** WorkshopMap click erro
 
 ### **Causa Raiz:**
-O erro React #310 é um minified error que significa "hooks being called in wrong context" ou "hooks being called after component unmount".
+O erro React #310 ï¿½ um minified error que significa "hooks being called in wrong context" ou "hooks being called after component unmount".
 
-## =Ë **COMPONENTES AFETADOS E CORREÇÕES APLICADAS**
+## =ï¿½ **COMPONENTES AFETADOS E CORREï¿½ï¿½ES APLICADAS**
 
 ###  **CORRIGIDOS:**
 
 #### 1. **WorkshopModalMobile.tsx** 
-- **Problema:** Hooks sendo chamados após desmontagem
+- **Problema:** Hooks sendo chamados apï¿½s desmontagem
 - **Sintomas:** Crashes ao clicar em pinos de oficinas no mapa mobile
-- **Correção:** Adicionado `isMounted` state + cleanup effects
+- **Correï¿½ï¿½o:** Adicionado `isMounted` state + cleanup effects
 - **Status:** Corrigido em commit `51344d6`
 
 #### 2. **WorkshopSearch.tsx** 
 - **Problema:** `setupABTest` sendo chamado no corpo do componente
 - **Sintomas:** Erro ao usar busca inteligente
-- **Correção:** Movido para `useEffect` + verificações de montagem
+- **Correï¿½ï¿½o:** Movido para `useEffect` + verificaï¿½ï¿½es de montagem
 - **Status:** Corrigido em commit `bbe817c`
 
 #### 3. **NearestWorkshopHero.tsx** 
-- **Problema:** `trackConversion` sendo chamado sem verificações
+- **Problema:** `trackConversion` sendo chamado sem verificaï¿½ï¿½es
 - **Sintomas:** Crashes no componente hero mobile
-- **Correção:** Verificações `isMounted` + try/catch
+- **Correï¿½ï¿½o:** Verificaï¿½ï¿½es `isMounted` + try/catch
 - **Status:** Corrigido em commit `bbe817c`
 
 #### 4. **use-analytics.ts** 
-- **Problema:** Hook não verificava se componente estava montado
-- **Sintomas:** Analytics falhando após unmount
-- **Correção:** `useRef` para tracking + verificações
+- **Problema:** Hook nï¿½o verificava se componente estava montado
+- **Sintomas:** Analytics falhando apï¿½s unmount
+- **Correï¿½ï¿½o:** `useRef` para tracking + verificaï¿½ï¿½es
 - **Status:** Corrigido em commit `51344d6`
 
 #### 5. **AdvancedAnalytics.ts** 
-- **Problema:** Métodos chamados sem verificações de contexto
+- **Problema:** Mï¿½todos chamados sem verificaï¿½ï¿½es de contexto
 - **Sintomas:** Falhas em tracking de analytics
-- **Correção:** Try/catch robusto + verificações `isTracking`
+- **Correï¿½ï¿½o:** Try/catch robusto + verificaï¿½ï¿½es `isTracking`
 - **Status:** Corrigido em commit `51344d6`
 
 #### 6. **use-user-analytics.ts** 
-- **Problema:** Hooks sendo chamados após unmount em MapPage.tsx
+- **Problema:** Hooks sendo chamados apï¿½s unmount em MapPage.tsx
 - **Sintomas:** Crashes no sistema de analytics principal
-- **Correção:** `isMounted` state + verificações em todos os métodos
+- **Correï¿½ï¿½o:** `isMounted` state + verificaï¿½ï¿½es em todos os mï¿½todos
 - **Status:** Corrigido no commit atual
+
+#### 7. **WorkshopMap.tsx (Mobile)**
+- **Problema:** RenderizaÃ§Ã£o condicional de componentes com hooks + multiple useEffect inconsistency
+- **Sintomas:** Error #310 ao clicar em pinos no mapa mobile (ID: q9y5ttgc91p)
+- **CorreÃ§Ã£o:** Hook safety pattern + always-render controllers + safe click handlers
+- **Status:** âœ… Corrigido em 03/11/2025
 
 ---
 
-## = **ANÁLISE DETALHADA DE ERROS POSSÍVEIS**
+## = **ANï¿½LISE DETALHADA DE ERROS POSSï¿½VEIS**
 
 ### **1. ERROS REACT/JAVASCRIPT**
 
 #### **React Hook Errors (Error #310, #321, #425)**
-- **Causa:** Hooks chamados fora do contexto correto ou após unmount
-- **Locais Críticos:**
+- **Causa:** Hooks chamados fora do contexto correto ou apï¿½s unmount
+- **Locais Crï¿½ticos:**
   - Componentes com analytics (`useAnalytics`, `useUserAnalytics`)
   - Componentes com A/B testing (`setupABTest`)
-  - Event handlers assíncronos (`setTimeout`, `Promise.then`)
+  - Event handlers assï¿½ncronos (`setTimeout`, `Promise.then`)
   - Cleanup inadequado de effects
-- **Prevenção:**
+- **Prevenï¿½ï¿½o:**
   -  Sempre usar `isMounted` state/ref
   -  Cleanup effects adequado
   -  Try/catch em hooks condicionais
 
 #### **Memory Leaks**
-- **Causa:** Event listeners não removidos, timeouts não cancelados
-- **Locais Críticos:**
+- **Causa:** Event listeners nï¿½o removidos, timeouts nï¿½o cancelados
+- **Locais Crï¿½ticos:**
   - `AdvancedAnalytics.ts` - Performance Observer
   - `WorkshopModalMobile.tsx` - Spring animations
   - `MapPage.tsx` - Auto-geolocation timeouts
-- **Prevenção:**
+- **Prevenï¿½ï¿½o:**
   -  `removeEventListener` em cleanup
   -  `clearTimeout` em cleanup
   -  `observer.disconnect()` em cleanup
 
-#### **State Updates após Unmount**
-- **Causa:** `setState` chamado após componente ser desmontado
+#### **State Updates apï¿½s Unmount**
+- **Causa:** `setState` chamado apï¿½s componente ser desmontado
 - **Sintomas:** Warning "Can't perform a React state update on an unmounted component"
-- **Prevenção:**
-  -  Verificações `isMounted` antes de `setState`
+- **Prevenï¿½ï¿½o:**
+  -  Verificaï¿½ï¿½es `isMounted` antes de `setState`
   -  Cancelar requests em progress
 
-### **2. ERROS DE GEOLOCALIZAÇÃO**
+### **2. ERROS DE GEOLOCALIZAï¿½ï¿½O**
 
 #### **GeolocationPositionError**
-- **Código 1 (PERMISSION_DENIED):** Usuário negou acesso
-- **Código 2 (POSITION_UNAVAILABLE):** Localização indisponível
-- **Código 3 (TIMEOUT):** Timeout na obtenção da localização
+- **Cï¿½digo 1 (PERMISSION_DENIED):** Usuï¿½rio negou acesso
+- **Cï¿½digo 2 (POSITION_UNAVAILABLE):** Localizaï¿½ï¿½o indisponï¿½vel
+- **Cï¿½digo 3 (TIMEOUT):** Timeout na obtenï¿½ï¿½o da localizaï¿½ï¿½o
 - **Locais:** `MapPage.tsx`, `NearestWorkshopHero.tsx`, `use-immediate-location.ts`
 - **Tratamento:**
   -  Fallback para IP geolocation
-  -  Cache de localização
+  -  Cache de localizaï¿½ï¿½o
   -  UI state adequado
 
 ### **3. ERROS DE REDE**
 
 #### **API Failures**
-- **Endpoints Críticos:**
+- **Endpoints Crï¿½ticos:**
   - `/api/workshops` - Lista de oficinas
   - `/api/workshops/search` - Busca de oficinas
-  - `/api/workshops/nearby` - Oficinas próximas
-  - `/api/workshops/nearest-one` - Oficina mais próxima
+  - `/api/workshops/nearby` - Oficinas prï¿½ximas
+  - `/api/workshops/nearest-one` - Oficina mais prï¿½xima
 - **Causas:**
   - Servidor offline
   - Rate limiting
@@ -117,74 +124,74 @@ O erro React #310 é um minified error que significa "hooks being called in wrong
   -  Graceful degradation
 
 #### **CORS Errors**
-- **Causa:** Requests para domínios externos sem CORS configurado
+- **Causa:** Requests para domï¿½nios externos sem CORS configurado
 - **Locais:** Analytics externos, IP geolocation
-- **Prevenção:** Proxy através do backend
+- **Prevenï¿½ï¿½o:** Proxy atravï¿½s do backend
 
-### **4. ERROS DE AUTENTICAÇÃO**
+### **4. ERROS DE AUTENTICAï¿½ï¿½O**
 
 #### **JWT Token Errors**
-- **Token expirado:** Logout automático necessário
-- **Token inválido:** Malformed ou corrupted
-- **Token ausente:** Usuário não logado
-- **Locais:** `use-auth.ts`, todas as páginas protegidas
+- **Token expirado:** Logout automï¿½tico necessï¿½rio
+- **Token invï¿½lido:** Malformed ou corrupted
+- **Token ausente:** Usuï¿½rio nï¿½o logado
+- **Locais:** `use-auth.ts`, todas as pï¿½ginas protegidas
 - **Tratamento:**
-  -  Refresh token automático
+  -  Refresh token automï¿½tico
   -  Redirect para login
   -  Clear de dados locais
 
 #### **Role Permission Errors**
-- **Acesso negado:** Usuário sem permissão adequada
+- **Acesso negado:** Usuï¿½rio sem permissï¿½o adequada
 - **Role mismatch:** Role diferente do esperado
-- **Prevenção:** Verificações no frontend + backend
+- **Prevenï¿½ï¿½o:** Verificaï¿½ï¿½es no frontend + backend
 
 ### **5. ERROS DE DADOS**
 
 #### **Database Errors**
-- **Connection timeout:** DB indisponível
-- **Query errors:** SQL malformado ou dados inválidos
+- **Connection timeout:** DB indisponï¿½vel
+- **Query errors:** SQL malformado ou dados invï¿½lidos
 - **Schema mismatch:** Estrutura de dados mudou
-- **Prevenção:** Validation schemas + migration scripts
+- **Prevenï¿½ï¿½o:** Validation schemas + migration scripts
 
 #### **Data Validation Errors**
-- **Campos obrigatórios:** Dados ausentes
-- **Formato inválido:** Email, telefone, CEP malformados
-- **Tamanho inválido:** Strings muito longas ou curtas
-- **Locais:** Formulários, APIs
-- **Tratamento:** Validação client + server side
+- **Campos obrigatï¿½rios:** Dados ausentes
+- **Formato invï¿½lido:** Email, telefone, CEP malformados
+- **Tamanho invï¿½lido:** Strings muito longas ou curtas
+- **Locais:** Formulï¿½rios, APIs
+- **Tratamento:** Validaï¿½ï¿½o client + server side
 
 ### **6. ERROS DE PERFORMANCE**
 
 #### **Memory Leaks**
-- **Causa:** Objetos não coletados pelo GC
+- **Causa:** Objetos nï¿½o coletados pelo GC
 - **Sintomas:** App fica lento com o tempo
-- **Locais Críticos:**
+- **Locais Crï¿½ticos:**
   - Listeners de eventos globais
-  - Timers não cancelados
-  - Closures segurando referências
+  - Timers nï¿½o cancelados
+  - Closures segurando referï¿½ncias
 
 #### **Infinite Loops**
-- **Causa:** useEffect sem dependências adequadas
+- **Causa:** useEffect sem dependï¿½ncias adequadas
 - **Sintomas:** 100% CPU, app trava
-- **Prevenção:** Dependency arrays corretos
+- **Prevenï¿½ï¿½o:** Dependency arrays corretos
 
 ### **7. ERROS DE COMPATIBILIDADE**
 
 #### **Browser Compatibility**
-- **APIs não suportadas:** Geolocation, Service Workers
-- **CSS não suportado:** Grid, Flexbox em browsers antigos
-- **JavaScript não suportado:** ES6+ features
-- **Prevenção:** Feature detection + polyfills
+- **APIs nï¿½o suportadas:** Geolocation, Service Workers
+- **CSS nï¿½o suportado:** Grid, Flexbox em browsers antigos
+- **JavaScript nï¿½o suportado:** ES6+ features
+- **Prevenï¿½ï¿½o:** Feature detection + polyfills
 
 #### **Mobile-Specific Errors**
 - **Touch events:** Diferentes entre iOS/Android
 - **Viewport issues:** Zoom, orientation changes
-- **Performance:** Memória limitada
-- **Prevenção:** Progressive enhancement
+- **Performance:** Memï¿½ria limitada
+- **Prevenï¿½ï¿½o:** Progressive enhancement
 
 ---
 
-## =à **ESTRATÉGIAS DE PREVENÇÃO**
+## =ï¿½ **ESTRATï¿½GIAS DE PREVENï¿½ï¿½O**
 
 ### **1. Error Boundaries**
 ```tsx
@@ -244,22 +251,22 @@ async function fetchWithRetry(url: string, options = {}, retries = 3) {
 
 ---
 
-## =Ê **MONITORAMENTO E ALERTAS**
+## =ï¿½ **MONITORAMENTO E ALERTAS**
 
 ### **Error Tracking Setup**
-- **Sentry/LogRocket:** Para tracking de erros em produção
-- **Custom Analytics:** Tracking de erros específicos do domínio
+- **Sentry/LogRocket:** Para tracking de erros em produï¿½ï¿½o
+- **Custom Analytics:** Tracking de erros especï¿½ficos do domï¿½nio
 - **Performance Monitoring:** Core Web Vitals, loading times
 
 ### **Health Checks**
-- **API Health:** Endpoints críticos funcionando
+- **API Health:** Endpoints crï¿½ticos funcionando
 - **Database Health:** Queries executando normalmente
 - **Authentication Health:** Login/logout funcionando
 
 ### **User Experience Monitoring**
-- **Error Rate:** % de sessões com erro
+- **Error Rate:** % de sessï¿½es com erro
 - **Performance:** Tempos de carregamento
-- **Conversion:** Funil de conversão funcionando
+- **Conversion:** Funil de conversï¿½o funcionando
 
 ---
 
@@ -278,34 +285,34 @@ async function fetchWithRetry(url: string, options = {}, retries = 3) {
 
 ---
 
-## =Ý **CHECKLIST DE PREVENÇÃO**
+## =ï¿½ **CHECKLIST DE PREVENï¿½ï¿½O**
 
 ### **Antes de cada Deploy:**
-- [ ] Todos os hooks têm cleanup adequado
-- [ ] Verificações `isMounted` em componentes críticos
+- [ ] Todos os hooks tï¿½m cleanup adequado
+- [ ] Verificaï¿½ï¿½es `isMounted` em componentes crï¿½ticos
 - [ ] Error boundaries configurados
 - [ ] Network error handling implementado
 - [ ] Performance profiling executado
 - [ ] Cross-browser testing realizado
 - [ ] Mobile testing realizado
 
-### **Código Review Checklist:**
-- [ ] useEffect tem dependências corretas
-- [ ] Event listeners são removidos em cleanup
-- [ ] Timeouts são cancelados em cleanup
-- [ ] Try/catch em operações assíncronas
-- [ ] Validation em inputs de usuário
+### **Cï¿½digo Review Checklist:**
+- [ ] useEffect tem dependï¿½ncias corretas
+- [ ] Event listeners sï¿½o removidos em cleanup
+- [ ] Timeouts sï¿½o cancelados em cleanup
+- [ ] Try/catch em operaï¿½ï¿½es assï¿½ncronas
+- [ ] Validation em inputs de usuï¿½rio
 - [ ] Loading states implementados
 - [ ] Error states implementados
 
 ---
 
-## =€ **PLANO DE AÇÃO PARA ERROS FUTUROS**
+## =ï¿½ **PLANO DE Aï¿½ï¿½O PARA ERROS FUTUROS**
 
 ### **1. Immediate Response (< 5 min)**
-- Identificar se é crítico (quebra funcionalidade principal)
-- Verificar se afeta todos os usuários ou subset
-- Rollback se necessário
+- Identificar se ï¿½ crï¿½tico (quebra funcionalidade principal)
+- Verificar se afeta todos os usuï¿½rios ou subset
+- Rollback se necessï¿½rio
 
 ### **2. Investigation (< 30 min)**
 - Reproduzir o erro localmente
@@ -313,31 +320,31 @@ async function fetchWithRetry(url: string, options = {}, retries = 3) {
 - Identificar causa raiz
 
 ### **3. Fix & Test (< 2 hours)**
-- Implementar correção
+- Implementar correï¿½ï¿½o
 - Testar em ambiente de staging
-- Code review da correção
+- Code review da correï¿½ï¿½o
 
 ### **4. Deploy & Monitor (< 1 hour)**
-- Deploy para produção
-- Monitorar métricas por 24h
-- Documentar a correção
+- Deploy para produï¿½ï¿½o
+- Monitorar mï¿½tricas por 24h
+- Documentar a correï¿½ï¿½o
 
 ---
 
-## =È **MÉTRICAS DE SUCESSO**
+## =ï¿½ **Mï¿½TRICAS DE SUCESSO**
 
 ### **Error Rate Targets:**
-- **JavaScript Errors:** < 0.1% das sessões
+- **JavaScript Errors:** < 0.1% das sessï¿½es
 - **API Errors:** < 0.5% das requests
 - **Performance Errors:** < 1% das page loads
 
 ### **User Experience Targets:**
 - **Time to Interactive:** < 3 segundos
 - **Error Recovery:** < 10 segundos para retry
-- **Offline Graceful Degradation:** 100% das features críticas
+- **Offline Graceful Degradation:** 100% das features crï¿½ticas
 
 ---
 
 *Documento criado em: 09/10/2025*
-*Última atualização: 09/10/2025*
-*Versão: 1.0*
+*ï¿½ltima atualizaï¿½ï¿½o: 09/10/2025*
+*Versï¿½o: 1.0*
