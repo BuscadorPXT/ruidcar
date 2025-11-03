@@ -502,15 +502,13 @@ export default function MapPage() {
       </header>
 
       <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
-        {/* Nearest Workshop Hero - Show on mobile when no active search */}
-        {isMobile && !searchQuery && !isLoading && (
-          <div className="mb-6">
-            <NearestWorkshopHero
-              onViewOnMap={handleHeroViewOnMap}
-              className="mb-4"
-            />
-          </div>
-        )}
+        {/* Nearest Workshop Hero - Always render to avoid React Error #310 */}
+        <div className={isMobile && !searchQuery && !isLoading ? "mb-6" : "hidden"}>
+          <NearestWorkshopHero
+            onViewOnMap={handleHeroViewOnMap}
+            className="mb-4"
+          />
+        </div>
         <div className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <div className="md:col-span-2">
@@ -593,7 +591,8 @@ export default function MapPage() {
               </div>
             ) : (
               <div className={isMobile ? "h-[500px]" : "h-[600px]"}>
-                {isMobile ? (
+                {/* Always render both components to avoid React Error #310 */}
+                <div className={isMobile ? "block" : "hidden"}>
                   <WorkshopMapMobile
                     workshops={filteredWorkshops}
                     selectedWorkshop={selectedWorkshop}
@@ -603,7 +602,8 @@ export default function MapPage() {
                     searchRadius={searchRadius}
                     userLocation={userLocation}
                   />
-                ) : (
+                </div>
+                <div className={isMobile ? "hidden" : "block"}>
                   <WorkshopMap
                     workshops={filteredWorkshops}
                     selectedWorkshop={selectedWorkshop}
@@ -612,7 +612,7 @@ export default function MapPage() {
                     searchRadius={searchRadius}
                     userLocation={userLocation}
                   />
-                )}
+                </div>
               </div>
             )}
           </TabsContent>
@@ -678,25 +678,23 @@ export default function MapPage() {
         </Tabs>
       </div>
 
-      {isMobile ? (
-        <WorkshopModalMobile
-          workshop={selectedWorkshop}
-          open={modalOpen}
-          onClose={() => {
-            setModalOpen(false);
-            setSelectedWorkshop(null);
-          }}
-        />
-      ) : (
-        <WorkshopModal
-          workshop={selectedWorkshop}
-          open={modalOpen}
-          onClose={() => {
-            setModalOpen(false);
-            setSelectedWorkshop(null);
-          }}
-        />
-      )}
+      {/* Always render both modals to avoid React Error #310 */}
+      <WorkshopModalMobile
+        workshop={selectedWorkshop}
+        open={modalOpen && isMobile}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedWorkshop(null);
+        }}
+      />
+      <WorkshopModal
+        workshop={selectedWorkshop}
+        open={modalOpen && !isMobile}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedWorkshop(null);
+        }}
+      />
     </div>
   );
 }

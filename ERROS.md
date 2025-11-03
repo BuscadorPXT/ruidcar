@@ -8,7 +8,8 @@
 - `iwga3rwqzqn` - 09/10/2025, 14:07:20
 - `q9y5ttgc91p` - 03/11/2025, 14:07:06 - **MOBILE** WorkshopMap click erro ✅ CORRIGIDO
 - `m5zifbw48a` - 03/11/2025, 14:27:46 - **MOBILE** WorkshopMapMobile click erro ✅ CORRIGIDO
-- `3quk6ghi934` - 03/11/2025, 14:33:04 - **MODALS** Early returns após hooks
+- `3quk6ghi934` - 03/11/2025, 14:33:04 - **MODALS** Early returns após hooks ✅ CORRIGIDO
+- `mmzgbvncm4a` - 03/11/2025, 14:39:59 - **MOBILE** Renderização condicional de componentes
 
 ### **Causa Raiz:**
 O erro React #310 � um minified error que significa "hooks being called in wrong context" ou "hooks being called after component unmount".
@@ -87,6 +88,15 @@ O erro React #310 � um minified error que significa "hooks being called in wro
 - **Problema:** Early return `if (!isOpen || !steps[currentStep]) return null;` APÓS hooks
 - **Sintomas:** Error #310 em onboarding tour toggle
 - **Correção:** Movido early return para bloco estruturado
+- **Status:** ✅ Corrigido em 03/11/2025
+
+#### 13. **MapPage.tsx - Renderização Condicional Mobile (CRÍTICO)**
+- **Problema:** 3 violações das Rules of Hooks - renderização condicional de componentes com hooks
+  1. `{isMobile && <NearestWorkshopHero />}` - Componente com hooks renderizado condicionalmente
+  2. `{isMobile ? <WorkshopMapMobile> : <WorkshopMap>}` - Componentes diferentes com hooks
+  3. `{isMobile ? <WorkshopModalMobile> : <WorkshopModal>}` - Modais diferentes com hooks
+- **Sintomas:** Error #310 APENAS no mobile ao mudar device detection (ID: mmzgbvncm4a)
+- **Correção:** Always-render pattern - ambos componentes sempre renderizados, visibilidade via CSS
 - **Status:** ✅ Corrigido em 03/11/2025
 
 ---
