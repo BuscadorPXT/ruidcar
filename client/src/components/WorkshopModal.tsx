@@ -64,7 +64,19 @@ export default function WorkshopModal({ workshop, open, onClose }: WorkshopModal
     setBookingModalOpen(true);
   };
 
-  if (!workshop) return null;
+  // Early return APÓS todos os hooks para evitar React Error #310
+  if (!workshop) {
+    return (
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-md">
+          <div className="text-center p-6">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">Carregando informações da oficina...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const handleWhatsApp = () => {
     if (workshop.phone) {

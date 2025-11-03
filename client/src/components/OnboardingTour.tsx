@@ -221,7 +221,10 @@ export default function OnboardingTour({ steps, isOpen, onComplete, onSkip }: On
     };
   }, [targetRect, steps, currentStep]);
 
-  if (!isOpen || !steps[currentStep]) return null;
+  // Early return APÓS todos os hooks para evitar React Error #310
+  if (!isOpen || !steps[currentStep]) {
+    return null;
+  }
 
   return (
     <AnimatePresence>

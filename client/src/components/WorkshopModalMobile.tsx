@@ -81,7 +81,19 @@ export default function WorkshopModalMobile({ workshop, open, onClose, source = 
     return () => clearTimeout(timeoutId);
   };
 
-  if (!workshop) return null;
+  // Early return APÓS todos os hooks para evitar React Error #310
+  if (!workshop) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/50 flex items-end">
+        <div className="w-full bg-white rounded-t-3xl p-6">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">Carregando informações da oficina...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     `${workshop.name} ${workshop.address}`

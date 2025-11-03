@@ -7,7 +7,8 @@
 - `z4um7lqvu4h` - 09/10/2025, 14:00:29
 - `iwga3rwqzqn` - 09/10/2025, 14:07:20
 - `q9y5ttgc91p` - 03/11/2025, 14:07:06 - **MOBILE** WorkshopMap click erro ✅ CORRIGIDO
-- `m5zifbw48a` - 03/11/2025, 14:27:46 - **MOBILE** WorkshopMapMobile click erro
+- `m5zifbw48a` - 03/11/2025, 14:27:46 - **MOBILE** WorkshopMapMobile click erro ✅ CORRIGIDO
+- `3quk6ghi934` - 03/11/2025, 14:33:04 - **MODALS** Early returns após hooks
 
 ### **Causa Raiz:**
 O erro React #310 � um minified error que significa "hooks being called in wrong context" ou "hooks being called after component unmount".
@@ -62,6 +63,30 @@ O erro React #310 � um minified error que significa "hooks being called in wro
 - **Problema:** Mesmos problemas do WorkshopMap.tsx - renderização condicional + sem hook safety
 - **Sintomas:** Error #310 persistente no mobile após primeira correção (ID: m5zifbw48a)
 - **Correção:** Hook safety pattern + sempre renderizar MapCenterController + safe event handlers
+- **Status:** ✅ Corrigido em 03/11/2025
+
+#### 9. **BookingModal.tsx (Critical)**
+- **Problema:** Early return `if (!workshop) return null;` APÓS declarar 9+ hooks
+- **Sintomas:** Error #310 ao abrir modal sem workshop selecionado (ID: 3quk6ghi934)
+- **Correção:** Early return com UI de loading em vez de return null
+- **Status:** ✅ Corrigido em 03/11/2025
+
+#### 10. **WorkshopModal.tsx (Critical)**
+- **Problema:** Early return `if (!workshop) return null;` APÓS declarar 5+ hooks
+- **Sintomas:** Error #310 em modal desktop de oficinas
+- **Correção:** Early return com UI de loading em vez de return null
+- **Status:** ✅ Corrigido em 03/11/2025
+
+#### 11. **WorkshopModalMobile.tsx (Critical)**
+- **Problema:** Early return `if (!workshop) return null;` APÓS declarar hooks complexos
+- **Sintomas:** Error #310 em modal mobile de oficinas
+- **Correção:** Early return com UI de loading em vez de return null
+- **Status:** ✅ Corrigido em 03/11/2025
+
+#### 12. **OnboardingTour.tsx (Medium)**
+- **Problema:** Early return `if (!isOpen || !steps[currentStep]) return null;` APÓS hooks
+- **Sintomas:** Error #310 em onboarding tour toggle
+- **Correção:** Movido early return para bloco estruturado
 - **Status:** ✅ Corrigido em 03/11/2025
 
 ---
