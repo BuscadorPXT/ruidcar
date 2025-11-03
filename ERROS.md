@@ -6,7 +6,8 @@
 - `iu9rf1yqdka` - 09/10/2025, 13:48:05
 - `z4um7lqvu4h` - 09/10/2025, 14:00:29
 - `iwga3rwqzqn` - 09/10/2025, 14:07:20
-- `q9y5ttgc91p` - 03/11/2025, 14:07:06 - **MOBILE** WorkshopMap click erro
+- `q9y5ttgc91p` - 03/11/2025, 14:07:06 - **MOBILE** WorkshopMap click erro ✅ CORRIGIDO
+- `m5zifbw48a` - 03/11/2025, 14:27:46 - **MOBILE** WorkshopMapMobile click erro
 
 ### **Causa Raiz:**
 O erro React #310 � um minified error que significa "hooks being called in wrong context" ou "hooks being called after component unmount".
@@ -55,6 +56,12 @@ O erro React #310 � um minified error que significa "hooks being called in wro
 - **Problema:** Renderização condicional de componentes com hooks + multiple useEffect inconsistency
 - **Sintomas:** Error #310 ao clicar em pinos no mapa mobile (ID: q9y5ttgc91p)
 - **Correção:** Hook safety pattern + always-render controllers + safe click handlers
+- **Status:** ✅ Corrigido em 03/11/2025
+
+#### 8. **WorkshopMapMobile.tsx (Mobile)**
+- **Problema:** Mesmos problemas do WorkshopMap.tsx - renderização condicional + sem hook safety
+- **Sintomas:** Error #310 persistente no mobile após primeira correção (ID: m5zifbw48a)
+- **Correção:** Hook safety pattern + sempre renderizar MapCenterController + safe event handlers
 - **Status:** ✅ Corrigido em 03/11/2025
 
 ---

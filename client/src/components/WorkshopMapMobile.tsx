@@ -37,18 +37,31 @@ function calculateZoomFromRadius(radiusKm: number): number {
 }
 
 // Component to handle map centering with smooth animation
-function MapCenterController({ center, searchRadius }: { center: [number, number]; searchRadius?: number }) {
+function MapCenterController({ center, searchRadius, enabled = true }: { center: [number, number]; searchRadius?: number; enabled?: boolean }) {
   const map = useMap();
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    const targetZoom = searchRadius ? calculateZoomFromRadius(searchRadius) : map.getZoom();
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
-    // Smooth animated transition to new center and zoom
-    map.flyTo(center, targetZoom, {
-      duration: 2.0, // Slightly faster for mobile
-      easeLinearity: 0.1
-    });
-  }, [center, searchRadius, map]);
+  useEffect(() => {
+    if (!isMountedRef.current || !enabled) return;
+
+    try {
+      const targetZoom = searchRadius ? calculateZoomFromRadius(searchRadius) : map.getZoom();
+
+      // Smooth animated transition to new center and zoom
+      map.flyTo(center, targetZoom, {
+        duration: 2.0, // Slightly faster for mobile
+        easeLinearity: 0.1
+      });
+    } catch (error) {
+      console.warn('MapCenterController mobile flyTo error:', error);
+    }
+  }, [center, searchRadius, map, enabled]);
 
   return null;
 }
@@ -83,9 +96,33 @@ function SearchRadiusCircle({
 // Custom zoom controls for mobile
 function MobileZoomControls() {
   const map = useMap();
+  const isMountedRef = useRef(true);
 
-  const zoomIn = () => map.zoomIn();
-  const zoomOut = () => map.zoomOut();
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const zoomIn = () => {
+    try {
+      if (isMountedRef.current) {
+        map.zoomIn();
+      }
+    } catch (error) {
+      console.warn('Mobile zoom in error:', error);
+    }
+  };
+
+  const zoomOut = () => {
+    try {
+      if (isMountedRef.current) {
+        map.zoomOut();
+      }
+    } catch (error) {
+      console.warn('Mobile zoom out error:', error);
+    }
+  };
 
   return (
     <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
@@ -140,7 +177,17 @@ export default function WorkshopMapMobile({
 }: WorkshopMapMobileProps) {
   const isMobile = useMobile();
   const [userLocation, setUserLocation] = useState<[number, number] | null>(propUserLocation || null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const isMountedRef = useRef(true);
   const mapRef = useRef<L.Map | null>(null);
+
+  // Initialize component and setup cleanup
+  useEffect(() => {
+    setIsInitialized(true);
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Track if we have a user location for showing radius circle
   const hasUserLocation = userLocation || propUserLocation;
@@ -178,20 +225,24 @@ export default function WorkshopMapMobile({
 
   // Sync with prop user location
   useEffect(() => {
-    if (propUserLocation) {
+    if (propUserLocation && isMountedRef.current && isInitialized) {
       setUserLocation(propUserLocation);
     }
-  }, [propUserLocation]);
+  }, [propUserLocation, isInitialized]);
 
   useEffect(() => {
     // Get user location only if not provided via props
-    if (!propUserLocation && navigator.geolocation) {
+    if (!propUserLocation && navigator.geolocation && isMountedRef.current && isInitialized) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setUserLocation([position.coords.latitude, position.coords.longitude]);
+          if (isMountedRef.current) {
+            setUserLocation([position.coords.latitude, position.coords.longitude]);
+          }
         },
         (error) => {
-          console.log("Could not get user location:", error);
+          if (isMountedRef.current) {
+            console.log("Could not get user location:", error);
+          }
         },
         {
           enableHighAccuracy: false, // Faster on mobile
@@ -200,7 +251,19 @@ export default function WorkshopMapMobile({
         }
       );
     }
-  }, [propUserLocation]);
+  }, [propUserLocation, isInitialized]);
+
+  // Early return if not initialized to ensure consistent hook order
+  if (!isInitialized) {
+    return (
+      <div className="h-full w-full flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+          <p className="text-gray-600 text-sm">Inicializando mapa mobile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full w-full rounded-lg overflow-hidden shadow-lg relative">
@@ -238,10 +301,12 @@ export default function WorkshopMapMobile({
           <MobileZoomControls />
           <MobileLocationButton onNearbySearch={onNearbySearch} />
 
-          {/* Animated center controller - only when user location is detected */}
-          {(center[0] !== -15.7801 || center[1] !== -47.9292) && (
-            <MapCenterController center={center} searchRadius={searchRadius} />
-          )}
+          {/* Animated center controller - always render but with enabled prop */}
+          <MapCenterController
+            center={center}
+            searchRadius={searchRadius}
+            enabled={center[0] !== -15.7801 || center[1] !== -47.9292}
+          />
 
           {/* Search radius circle - show when we have user location */}
           {actualUserLocation && (
@@ -270,16 +335,27 @@ export default function WorkshopMapMobile({
           )}
 
           {/* Workshop markers */}
-          {workshops.map((workshop) => (
-            <Marker
-              key={workshop.id}
-              position={[parseFloat(workshop.latitude), parseFloat(workshop.longitude)]}
-              icon={selectedWorkshop?.id === workshop.id ? selectedIcon : mobileIcon}
-              alt={`Oficina ${workshop.name} em ${workshop.city}, ${workshop.state}`}
-              eventHandlers={{
-                click: () => onWorkshopClick(workshop),
-              }}
-            >
+          {workshops.map((workshop) => {
+            const safeOnWorkshopClick = () => {
+              try {
+                if (isMountedRef.current) {
+                  onWorkshopClick(workshop);
+                }
+              } catch (error) {
+                console.warn('Mobile workshop click error:', error);
+              }
+            };
+
+            return (
+              <Marker
+                key={workshop.id}
+                position={[parseFloat(workshop.latitude), parseFloat(workshop.longitude)]}
+                icon={selectedWorkshop?.id === workshop.id ? selectedIcon : mobileIcon}
+                alt={`Oficina ${workshop.name} em ${workshop.city}, ${workshop.state}`}
+                eventHandlers={{
+                  click: safeOnWorkshopClick,
+                }}
+              >
               <Popup className="mobile-popup" closeButton={false}>
                 <div className="p-3" role="dialog" aria-label={`Informações da oficina ${workshop.name}`}>
                   <h3 className="font-bold text-base mb-2">{workshop.name}</h3>
@@ -291,7 +367,7 @@ export default function WorkshopMapMobile({
                     <p className="text-sm text-gray-500 mb-3">🌍 {workshop.city}, {workshop.state}</p>
                   )}
                   <Button
-                    onClick={() => onWorkshopClick(workshop)}
+                    onClick={safeOnWorkshopClick}
                     size="sm"
                     className="w-full mt-2 text-sm h-9"
                     aria-label={`Ver detalhes completos da oficina ${workshop.name}`}
@@ -301,7 +377,8 @@ export default function WorkshopMapMobile({
                 </div>
               </Popup>
             </Marker>
-          ))}
+            );
+          })}
         </MapContainer>
       </div>
 
