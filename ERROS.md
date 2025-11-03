@@ -9,7 +9,8 @@
 - `q9y5ttgc91p` - 03/11/2025, 14:07:06 - **MOBILE** WorkshopMap click erro ✅ CORRIGIDO
 - `m5zifbw48a` - 03/11/2025, 14:27:46 - **MOBILE** WorkshopMapMobile click erro ✅ CORRIGIDO
 - `3quk6ghi934` - 03/11/2025, 14:33:04 - **MODALS** Early returns após hooks ✅ CORRIGIDO
-- `mmzgbvncm4a` - 03/11/2025, 14:39:59 - **MOBILE** Renderização condicional de componentes
+- `mmzgbvncm4a` - 03/11/2025, 14:39:59 - **MOBILE** Renderização condicional de componentes ✅ CORRIGIDO
+- `8vn4j36jfpv` - 03/11/2025, 14:46:53 - **LAZY LOADING** LazySection renderização condicional
 
 ### **Causa Raiz:**
 O erro React #310 � um minified error que significa "hooks being called in wrong context" ou "hooks being called after component unmount".
@@ -97,6 +98,14 @@ O erro React #310 � um minified error que significa "hooks being called in wro
   3. `{isMobile ? <WorkshopModalMobile> : <WorkshopModal>}` - Modais diferentes com hooks
 - **Sintomas:** Error #310 APENAS no mobile ao mudar device detection (ID: mmzgbvncm4a)
 - **Correção:** Always-render pattern - ambos componentes sempre renderizados, visibilidade via CSS
+- **Status:** ✅ Corrigido em 03/11/2025
+
+#### 14. **LazySection.tsx - Lazy Loading Condicional (CRÍTICO)**
+- **Problema:** Renderização condicional de componentes lazy com hooks
+  - `{isInView && Component ? <Component> : fallback}` - Componente lazy renderizado condicionalmente
+  - Lazy components carregados têm hooks que são chamados inconsistentemente
+- **Sintomas:** Error #310 em lazy loading de seções na Home (ID: 8vn4j36jfpv)
+- **Correção:** Always-render pattern - Suspense sempre renderizado, visibilidade via CSS
 - **Status:** ✅ Corrigido em 03/11/2025
 
 ---
